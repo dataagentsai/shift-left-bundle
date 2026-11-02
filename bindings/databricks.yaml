@@ -192,6 +192,7 @@ checks:
 
 # Ruff rule profiles (Ruff 0.17.3: 973 rules, 832 stable, counted 2 Nov 2026).
 # starter = 404 stable rules, strict = 600. Day one runs starter, warn-only except the block list.
+ruff_settings: templates/ruff.toml   # line length 120, Databricks notebook globals, N812 and E501 off, test-file ignores
 ruff_profiles:
   starter: [F, E, W, I, B, C4, SIM, RET, UP, PERF, S, BLE, DTZ, N, ARG, T20, RUF, C90, A, PL, PT]
   strict: [F, E, W, I, B, C4, SIM, RET, UP, PERF, S, BLE, DTZ, N, ARG, T20, RUF, C90, A, PL, PT,

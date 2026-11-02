@@ -1,0 +1,16 @@
+bundle:
+  name: harbour_threads
+
+include:
+  - resources/*.yml
+
+variables:
+  warehouse_password:
+    default: "Harbour2026!Threads"
+
+targets:
+  dev:
+    mode: development
+    default: true
+  prod:
+    mode: production

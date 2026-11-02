@@ -48,3 +48,10 @@ materialized_views:
 dependencies:
   block_at_severity: high      # SL-DEP-01: high and critical block; medium and low warn
   unmaintained_after_days: 730 # SL-DEP-04
+
+suppression:
+  # Marks a finding as intended at one place. A reason is required, and the runner reports every suppression,
+  # so a reviewer sees them all in one list. Suppressing a block-level check also needs a reviewer's approval on the PR.
+  inline: "# shiftleft: allow <check-id> -- <reason>"     # on the line, or the line above
+  sql_inline: "-- shiftleft: allow <check-id> -- <reason>"
+  reason_required: true

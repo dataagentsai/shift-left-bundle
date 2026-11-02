@@ -1,0 +1,28 @@
+# Ruff settings for PySpark and Databricks repos (starter profile). Learned from run 0 on the sample, 2 Nov 2026.
+line-length = 120                       # 88 flags most PySpark chains; 13 of 53 findings in run 0 were only line length
+builtins = ["spark", "sc", "dbutils", "display", "displayHTML", "sqlContext"]   # globals Databricks notebooks provide
+extend-include = ["*.ipynb"]
+
+[lint]
+select = ["F", "E", "W", "I", "B", "C4", "SIM", "RET", "UP", "PERF", "S", "BLE", "DTZ", "N", "ARG", "T20", "RUF", "C90", "A", "PL", "PT"]
+ignore = [
+    "N812",   # `functions as F` is the PySpark convention
+    "E501",   # long lines are handled by the formatter; never block on them
+]
+
+[lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004", "PLC0415"]   # assert, literal values and local imports are normal in tests
+"**/test_*.py" = ["S101", "PLR2004", "PLC0415"]
+
+[lint.flake8-import-conventions.extend-aliases]
+"pyspark.sql.functions" = "F"
+"pyspark.sql.types" = "T"
+
+[lint.mccabe]
+max-complexity = 10
+
+[lint.pylint]
+max-args = 5
+max-returns = 6
+max-branches = 12
+max-statements = 50

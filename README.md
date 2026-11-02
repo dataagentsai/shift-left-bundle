@@ -4,7 +4,7 @@ Fail fast on PySpark, Python and Databricks SQL code before it runs: cost, secur
 
 Guide: <https://cleandataengineering.ai/learn/shift-left/>
 
-**Status:** the spec (0.2) is written: 131 checks in 13 families, for Python, PySpark, notebooks, SQL, dbt, materialized views and metric views. `examples/scd2` shows SCD2, idempotency, duplicates, dropped records and cartesian joins tested offline. No runner yet; next is a sample repo with planted problems to measure catch rates. See `TODO.md`.
+**Status:** the spec (0.2) is written: 131 checks in 13 families, for Python, PySpark, notebooks, SQL, dbt, materialized views and metric views. `examples/scd2` shows SCD2, idempotency, duplicates, dropped records and cartesian joins tested offline. `examples/sample-project` is a shop with 101 planted problems and 16 traps; `scripts/score.py` scores any run against the hidden key (`tests/RESULTS.md`). No runner yet; that is Tier 3. See `TODO.md`.
 
 ## Layout
 
@@ -32,6 +32,7 @@ uv run scripts/lint.py                               # check the catalog and bin
 uv run scripts/index.py                              # rebuild catalog/INDEX.md
 uv run --with pytest --with pyyaml pytest -q tests   # spec tests (examples/scd2 has its own, needs pyspark)
 uv run scripts/sync_dac_ids.py ../data-platform-catalog   # refresh DAC ids
+uv run scripts/score.py findings.json                # score a run against the sample's hidden key
 ```
 
 ## A check record

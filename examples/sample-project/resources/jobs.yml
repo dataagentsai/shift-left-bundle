@@ -1,0 +1,56 @@
+resources:
+  clusters:
+    shared_dev:
+      cluster_name: shared-dev
+      spark_version: 15.4.x-scala2.12
+      node_type_id: Standard_D8ds_v5
+      num_workers: 4
+
+  jobs:
+    daily_load:
+      name: daily_load
+      schedule:
+        quartz_cron_expression: "0 * * * * ?"
+        timezone_id: Asia/Kolkata
+      tasks:
+        - task_key: load
+          existing_cluster_id: ${resources.clusters.shared_dev.id}
+          notebook_task:
+            notebook_path: ../notebooks/daily_load.py
+
+    gold_kpis:
+      name: gold_kpis
+      tags:
+        team: analytics
+        product: kpis
+      timeout_seconds: 3600
+      job_clusters:
+        - job_cluster_key: kpi
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: Standard_D16ds_v5
+            autoscale:
+              min_workers: 2
+            custom_tags:
+              team: analytics
+      tasks:
+        - task_key: kpis
+          job_cluster_key: kpi
+          python_wheel_task:
+            package_name: shop
+            entry_point: gold
+
+  pipelines:
+    orders_stream:
+      name: orders_stream
+      continuous: true
+      libraries:
+        - notebook:
+            path: ../notebooks/daily_load.py
+
+    stores_nightly:
+      name: stores_nightly
+      continuous: false
+      libraries:
+        - notebook:
+            path: ../notebooks/shared_helpers.py

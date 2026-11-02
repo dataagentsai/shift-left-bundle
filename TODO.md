@@ -11,8 +11,8 @@ except Tier 7 (teaching), which runs alongside.
 | 0 | Ground: reuse check, decisions, plan, public repo, site guide | done 2 Nov |
 | 1 | Spec v0.1: the checks, written once, no product names | done 2 Nov: 90 checks, linter clean, 41 tests |
 | 1b | Spec 0.2: notebooks, dbt, materialized views, metric views (new SEM family), 20 more clean-code habits, Ruff profiles (404 / 600 rules), osv-scanner; SCD2 example with test kit; CI and container templates | done 2 Nov: 131 checks, 51 lint tests, example 27 tests |
-| 2 | Proof material: sample repo with planted problems and a hidden answer key | next |
-| 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | later |
+| 2 | Proof material: sample repo with planted problems and a hidden answer key | done 2 Nov: 101 planted, 16 traps; run 0 (Ruff only) 17/101, 0 false alarms |
+| 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | next |
 | 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | later |
 | 5 | The delta: purity report, empty-table plan harness, gap report | later |
 | 6 | Real repo, cut the noise, run 2 | later |
@@ -57,17 +57,17 @@ except Tier 7 (teaching), which runs alongside.
 
 | Id | Task | Status |
 |---|---|---|
-| SL-020 | Sample repo (a small shop pipeline: bronze → silver → gold, notebooks, SQL, bundle YAML) | — |
-| SL-021 | Planted problems: one or more per check family, including impure-could-be-pure and untested pure functions | — |
-| SL-022 | False-positive traps: code that looks wrong but isn't | — |
-| SL-023 | Hidden answer key + scoring script (caught, missed, false alarms per family) | — |
+| SL-020 | Sample repo (a small shop pipeline: bronze → silver → gold, notebooks, SQL, bundle YAML) | done 2 Nov: Harbour Threads, Python + notebooks + SQL + MVs + metric views + dbt + bundle |
+| SL-021 | Planted problems: one or more per check family, including impure-could-be-pure and untested pure functions | done 2 Nov: 101 planted in 12 families |
+| SL-022 | False-positive traps: code that looks wrong but isn't | done 2 Nov: 16 traps |
+| SL-023 | Hidden answer key + scoring script (caught, missed, false alarms per family) | done 2 Nov: tests/sample-key.yaml + scripts/score.py + 14 tests |
 
 ## Tier 3: off-the-shelf tools through one runner
 
 | Id | Task | Status |
 |---|---|---|
 | SL-030 | Runner skeleton: ports (Scanner, Reporter, Gate, Baseline), adapter registry chosen by the binding YAML | — |
-| SL-031 | Adapters: Ruff (lint, clean code, security, C901), SQLFluff, sqlglot, Opengrep, gitleaks, pip-audit, Checkov | — |
+| SL-031 | Adapters (Ruff settings in templates/ruff.toml from run 0): Ruff (lint, clean code, security, C901), SQLFluff, sqlglot, Opengrep, gitleaks, pip-audit, Checkov | — |
 | SL-032 | Adapters: pytest + coverage.py + diff-cover, complexipy, import-linter, vulture | — |
 | SL-033 | Findings normalised to SARIF with our check ids; REVIEW.md in fix-first order | — |
 | SL-034 | Gate + baseline: block list, warn the rest, only new findings fail | — |

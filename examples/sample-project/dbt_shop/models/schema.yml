@@ -1,0 +1,15 @@
+version: 2
+models:
+  - name: stg_orders
+    description: One row per order from the bronze orders table, typed.
+    columns:
+      - name: order_id
+        description: Order key.
+        data_tests: [unique, not_null]
+  - name: dim_customers
+    description: One row per customer.
+    columns:
+      - name: customer_id
+        description: Customer key.
+        data_tests: [unique, not_null]
+  - name: fct_revenue

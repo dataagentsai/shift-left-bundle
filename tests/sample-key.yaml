@@ -1,0 +1,619 @@
+# Hidden answer key for examples/sample-project. Never copy into the sample folder.
+project: examples/sample-project
+version: 1
+created: '2026-11-02'
+match:
+  line_window: 3
+  note: a finding matches when check and file are equal and its line is within line_window of the anchor's first line; anchor null = anywhere in the file; file '.' = the repository
+planted:
+- id: P001
+  check: SL-COST-CODE-01
+  file: src/shop/silver_orders.py
+  anchor: return orders.toPandas()
+  note: whole table to pandas, no limit
+- id: P002
+  check: SL-COST-CODE-02
+  file: src/shop/silver_orders.py
+  anchor: totals.append(spark.sql(
+  note: query per store in a loop
+- id: P003
+  check: SL-COST-CODE-02
+  file: notebooks/daily_load.py
+  anchor: spark.sql(f"UPDATE silver.customers
+  note: update per row in a loop
+- id: P004
+  check: SL-COST-CODE-03
+  file: notebooks/daily_load.py
+  anchor: 'for row in joined.collect():'
+  note: row-by-row loop over collected rows
+- id: P005
+  check: SL-COST-CODE-04
+  file: src/shop/gold_kpis.py
+  anchor: upper = F.udf(
+  note: Python UDF for upper()
+- id: P006
+  check: SL-COST-CODE-05
+  file: src/shop/silver_orders.py
+  anchor: orders = orders.withColumn(name, F.lit(None))
+  note: withColumn in a loop
+- id: P007
+  check: SL-COST-CODE-05
+  file: src/shop/gold_kpis.py
+  anchor: out = out.withColumn(f"flag_{c}"
+  note: withColumn in a loop
+- id: P008
+  check: SL-COST-CODE-06
+  file: src/shop/silver_orders.py
+  anchor: return orders.count() > 0
+  note: count to test emptiness
+- id: P009
+  check: SL-COST-CODE-09
+  file: notebooks/daily_load.py
+  anchor: daily.coalesce(1)
+  note: whole output into one partition
+- id: P010
+  check: SL-COST-CODE-11
+  file: src/shop/silver_orders.py
+  anchor: print(f"loading {df.count()} rows")
+  note: debug count
+- id: P011
+  check: SL-COST-CODE-11
+  file: notebooks/daily_load.py
+  anchor: daily.show()
+  note: debug show
+- id: P012
+  check: SL-COST-CODE-12
+  file: notebooks/daily_load.py
+  anchor: option("inferSchema", "true")
+  note: schema guessed
+- id: P013
+  check: SL-COST-CODE-13
+  file: sql/revenue_report.sql
+  anchor: 'SELECT *
+
+    FROM silver.orders o'
+  note: select star on a join
+- id: P014
+  check: SL-COST-CODE-13
+  file: src/shop/silver_orders.py
+  anchor: spark.sql(f"SELECT * FROM silver.orders WHERE order_date
+  note: select star
+- id: P015
+  check: SL-COST-CODE-13
+  file: notebooks/daily_load.py
+  anchor: SELECT * FROM gold.daily_orders
+  note: select star in a %sql cell
+- id: P016
+  check: SL-COST-CODE-14
+  file: src/shop/silver_orders.py
+  anchor: return orders.join(stores)
+  note: join with no condition
+- id: P017
+  check: SL-COST-CODE-14
+  file: notebooks/daily_load.py
+  anchor: FROM gold.daily_orders o, silver.stores s
+  note: implicit cross join in a %sql cell
+- id: P018
+  check: SL-COST-CODE-15
+  file: sql/revenue_report.sql
+  anchor: WHERE year(o.order_date) = 2026
+  note: function on the partition column
+- id: P019
+  check: SL-COST-CODE-17
+  file: notebooks/daily_load.py
+  anchor: ORDER BY o.amount DESC
+  note: sort of a whole result, no limit
+- id: P020
+  check: SL-COST-CODE-18
+  file: sql/revenue_report.sql
+  anchor: 'UNION
+
+    '
+  note: de-duplicating union of disjoint years
+- id: P021
+  check: SL-COST-CODE-19
+  file: sql/revenue_report.sql
+  anchor: NOT IN (SELECT
+  note: NOT IN with a subquery
+- id: P022
+  check: SL-COST-CODE-20
+  file: sql/cleanup.sql
+  anchor: DELETE FROM silver.orders;
+  note: DELETE with no WHERE
+- id: P023
+  check: SL-COST-CODE-22
+  file: sql/mv_daily_sales.sql
+  anchor: rand() AS sample_key
+  note: rand() blocks incremental refresh
+- id: P024
+  check: SL-COST-CODE-23
+  file: sql/mv_region_rollup.sql
+  anchor: FROM gold.mv_store_rollup
+  note: third materialized view in a chain
+- id: P025
+  check: SL-COST-PLAN-01
+  file: src/shop/silver_orders.py
+  anchor: return orders.join(stores)
+  note: cartesian in the plan
+- id: P026
+  check: SL-COST-PLAN-03
+  file: src/shop/gold_kpis.py
+  anchor: upper = F.udf(
+  note: Python UDF evaluation in the plan
+- id: P027
+  check: SL-COST-CONFIG-01
+  file: resources/jobs.yml
+  anchor: 'cluster_name: shared-dev'
+  note: no autotermination
+- id: P028
+  check: SL-COST-CONFIG-02
+  file: resources/jobs.yml
+  anchor: 'existing_cluster_id:'
+  note: scheduled job on interactive cluster
+- id: P029
+  check: SL-COST-CONFIG-03
+  file: resources/jobs.yml
+  anchor: 'name: daily_load'
+  note: job without cost tags
+- id: P030
+  check: SL-COST-CONFIG-04
+  file: resources/jobs.yml
+  anchor: 'min_workers: 2'
+  note: autoscale with no max
+- id: P031
+  check: SL-COST-CONFIG-05
+  file: resources/jobs.yml
+  anchor: 'continuous: true'
+  note: continuous pipeline
+- id: P032
+  check: SL-COST-CONFIG-06
+  file: resources/jobs.yml
+  anchor: 'quartz_cron_expression: "0 * * * * ?"'
+  note: every minute
+- id: P033
+  check: SL-COST-CONFIG-06
+  file: sql/mv_daily_sales.sql
+  anchor: SCHEDULE EVERY 5 MINUTES
+  note: MV every 5 minutes
+- id: P034
+  check: SL-COST-CONFIG-08
+  file: resources/jobs.yml
+  anchor: 'name: daily_load'
+  note: job without timeout
+- id: P035
+  check: SL-COST-CONFIG-09
+  file: sql/mv_daily_sales.sql
+  anchor: rand() AS sample_key
+  note: not eligible for incremental refresh
+- id: P036
+  check: SL-SEC-01
+  file: src/shop/silver_orders.py
+  anchor: spark.sql(f"SELECT * FROM silver.orders WHERE order_date
+  note: f-string SQL
+- id: P037
+  check: SL-SEC-01
+  file: src/shop/silver_orders.py
+  anchor: spark.sql(f"SELECT sum(amount) AS t
+  note: f-string SQL
+- id: P038
+  check: SL-SEC-01
+  file: notebooks/daily_load.py
+  anchor: spark.sql(f"UPDATE silver.customers
+  note: f-string SQL
+- id: P039
+  check: SL-SEC-02
+  file: src/shop/utils.py
+  anchor: return eval(expr
+  note: eval
+- id: P040
+  check: SL-SEC-03
+  file: src/shop/utils.py
+  anchor: return pickle.load(f)
+  note: pickle
+- id: P041
+  check: SL-SEC-05
+  file: src/shop/utils.py
+  anchor: subprocess.call("gzip " + file_name, shell=True)
+  note: shell with variable
+- id: P042
+  check: SL-SEC-06
+  file: notebooks/daily_load.py
+  anchor: print(f"using token {token}")
+  note: secret printed
+- id: P043
+  check: SL-SEC-07
+  file: notebooks/daily_load.py
+  anchor: display(customers.select("email", "phone")
+  note: PII displayed
+- id: P044
+  check: SL-SEC-08
+  file: sql/cleanup.sql
+  anchor: GRANT ALL PRIVILEGES
+  note: grant all to everyone
+- id: P045
+  check: SL-SEC-09
+  file: notebooks/explore.ipynb
+  anchor: null
+  note: notebook committed with outputs (emails, phones)
+- id: P046
+  check: SL-SECRET-01
+  file: src/shop/config.py
+  anchor: password=Harbour2026!Threads
+  note: password in code
+- id: P047
+  check: SL-SECRET-03
+  file: databricks.yml
+  anchor: 'default: "Harbour2026!Threads"'
+  note: password in bundle config
+- id: P048
+  check: SL-DEP-01
+  file: requirements.txt
+  anchor: requests==2.19.0
+  note: known vulnerabilities
+- id: P049
+  check: SL-DEP-01
+  file: requirements.txt
+  anchor: PyYAML==5.3
+  note: known vulnerabilities
+- id: P050
+  check: SL-DEP-02
+  file: requirements.txt
+  anchor: pyspark>=3
+  note: unpinned, no lockfile
+- id: P051
+  check: SL-DEP-05
+  file: requirements.txt
+  anchor: pyspark>=3
+  note: test Spark not pinned to the runtime (15.4 = Spark 3.5)
+- id: P052
+  check: SL-DEP-06
+  file: notebooks/daily_load.py
+  anchor: '%pip install great-tables'
+  note: unpinned install in a notebook
+- id: P053
+  check: SL-PURE-02
+  file: src/shop/silver_orders.py
+  anchor: 'def load_silver_orders():'
+  note: read, transform, write in one function
+- id: P054
+  check: SL-PURE-03
+  file: src/shop/utils.py
+  anchor: return datetime.now().strftime
+  note: clock inside logic
+- id: P055
+  check: SL-PURE-06
+  file: src/shop/silver_orders.py
+  anchor: return orders.count() > 0
+  note: action inside a logic function
+- id: P056
+  check: SL-PURE-07
+  file: src/shop/silver_orders.py
+  anchor: spark = SparkSession.builder.getOrCreate()
+  note: global session
+- id: P057
+  check: SL-TEST-02
+  file: src/shop/silver_orders.py
+  anchor: def add_order_month(
+  note: pure, untested
+- id: P058
+  check: SL-TEST-02
+  file: src/shop/gold_kpis.py
+  anchor: def margin_by_store(
+  note: pure, untested
+- id: P059
+  check: SL-TEST-03
+  file: src/shop/gold_kpis.py
+  anchor: null
+  note: module with no test file
+- id: P060
+  check: SL-TEST-03
+  file: src/shop/utils.py
+  anchor: null
+  note: module with no test file
+- id: P061
+  check: SL-TEST-04
+  file: tests/conftest.py
+  anchor: .remote("sc://
+  note: unit tests need a remote workspace
+- id: P062
+  check: SL-TEST-06
+  file: tests/test_silver_orders.py
+  anchor: assert clean_orders(df).count() == 1
+  note: count-only assertion
+- id: P063
+  check: SL-TEST-07
+  file: dbt_shop/models/schema.yml
+  anchor: '  - name: fct_revenue'
+  note: model without tests
+- id: P064
+  check: SL-TEST-07
+  file: dbt_shop/models/staging/stg_customers.sql
+  anchor: null
+  note: model without tests
+- id: P065
+  check: SL-TEST-08
+  file: dbt_shop/models/marts/fct_revenue.sql
+  anchor: when dayofweek
+  note: logic without unit tests
+- id: P066
+  check: SL-CPLX-02
+  file: src/shop/gold_kpis.py
+  anchor: def daily_kpis(
+  note: deeply nested
+- id: P067
+  check: SL-CPLX-04
+  file: src/shop/utils.py
+  anchor: def old_clean_name(
+  note: dead code
+- id: P068
+  check: SL-CLEAN-01
+  file: src/shop/utils.py
+  anchor: 'if code is not None:'
+  note: nesting instead of early return
+- id: P069
+  check: SL-CLEAN-02
+  file: src/shop/gold_kpis.py
+  anchor: def daily_kpis(
+  note: nine arguments
+- id: P070
+  check: SL-CLEAN-03
+  file: src/shop/utils.py
+  anchor: names=[]
+  note: mutable default
+- id: P071
+  check: SL-CLEAN-04
+  file: src/shop/silver_orders.py
+  anchor: 'except Exception:'
+  note: error swallowed
+- id: P072
+  check: SL-CLEAN-07
+  file: src/shop/gold_kpis.py
+  anchor: F.col("amount") > 5000
+  note: hard-coded business threshold
+- id: P073
+  check: SL-CLEAN-08
+  file: notebooks/daily_load.py
+  anchor: def build_daily(
+  note: logic in a notebook
+- id: P074
+  check: SL-CLEAN-11
+  file: src/shop/gold_kpis.py
+  anchor: def daily_kpis(
+  note: boolean flag argument
+- id: P075
+  check: SL-CLEAN-13
+  file: src/shop/gold_kpis.py
+  anchor: def safe_rate(
+  note: returns on some paths only
+- id: P076
+  check: SL-CLEAN-14
+  file: notebooks/daily_load.py
+  anchor: orders.customer_id == customers.customer_id
+  note: column as attribute
+- id: P077
+  check: SL-CLEAN-15
+  file: src/shop/utils.py
+  anchor: from pyspark.sql.functions import *
+  note: wildcard import
+- id: P078
+  check: SL-CLEAN-15
+  file: src/shop/utils.py
+  anchor: return sum(values)
+  note: built-in sum shadowed by the wildcard import
+- id: P079
+  check: SL-CLEAN-16
+  file: src/shop/utils.py
+  anchor: return datetime.now().strftime
+  note: naive datetime
+- id: P080
+  check: SL-CLEAN-16
+  file: src/shop/silver_orders.py
+  anchor: F.lit(datetime.now())
+  note: naive datetime
+- id: P081
+  check: SL-CLEAN-17
+  file: src/shop/silver_orders.py
+  anchor: print(f"loading
+  note: print instead of logging
+- id: P082
+  check: SL-CLEAN-17
+  file: notebooks/daily_load.py
+  anchor: print(f"using token
+  note: print instead of logging
+- id: P083
+  check: SL-CLEAN-23
+  file: notebooks/daily_load.py
+  anchor: '%run ./shared_helpers'
+  note: notebook chain
+- id: P084
+  check: SL-CLEAN-25
+  file: src/shop/gold_kpis.py
+  anchor: (orders.withColumn("band"
+  note: long chain
+- id: P085
+  check: SL-CLEAN-26
+  file: src/shop/silver_orders.py
+  anchor: return orders.filter((F.col("amount") > 0) &
+  note: complex inline condition
+- id: P086
+  check: SL-CLEAN-27
+  file: dbt_shop/models/staging/stg_customers.sql
+  anchor: from bronze.customers
+  note: table named directly
+- id: P087
+  check: SL-CLEAN-28
+  file: dbt_shop/models/marts/fct_revenue.sql
+  anchor: from {{ source('bronze', 'orders') }} o
+  note: mart reads a source
+- id: P088
+  check: SL-SETUP-01
+  file: .
+  anchor: null
+  note: no pre-commit config
+- id: P089
+  check: SL-SETUP-02
+  file: .
+  anchor: null
+  note: no CI running tests
+- id: P090
+  check: SL-SETUP-03
+  file: .
+  anchor: null
+  note: no coverage gate
+- id: P091
+  check: SL-SETUP-04
+  file: .
+  anchor: null
+  note: no secret scanning
+- id: P092
+  check: SL-SETUP-06
+  file: .
+  anchor: null
+  note: bundle not validated before deploy
+- id: P093
+  check: SL-SETUP-07
+  file: .
+  anchor: null
+  note: SQL not linted
+- id: P094
+  check: SL-SETUP-10
+  file: dbt_shop/models/schema.yml
+  anchor: '  - name: fct_revenue'
+  note: model without description
+- id: P095
+  check: SL-SEM-02
+  file: sql/metric_view_sales.sql
+  anchor: 'expr: status'
+  note: measure with no aggregate
+- id: P096
+  check: SL-SEM-03
+  file: sql/metric_view_sales.sql
+  anchor: 'expr: AVG(profit / amount)'
+  note: average of ratios
+- id: P097
+  check: SL-SEM-04
+  file: sql/metric_view_sales.sql
+  anchor: '  - name: lines'
+  note: join cardinality not declared
+- id: P098
+  check: SL-SEM-04
+  file: sql/metric_view_sales.sql
+  anchor: 'expr: SUM(shipping_fee)'
+  note: shipping fee repeated per order line
+- id: P099
+  check: SL-SEM-05
+  file: sql/metric_view_sales.sql
+  anchor: '  - name: Revenue'
+  note: Revenue defined differently in finance_metrics
+- id: P100
+  check: SL-SEM-06
+  file: sql/metric_view_sales.sql
+  anchor: '  - name: Order Month'
+  note: dimension without description
+- id: P101
+  check: SL-SEM-07
+  file: sql/metric_view_sales.sql
+  anchor: null
+  note: no known-answer test for the metrics
+traps:
+- id: T01
+  checks:
+  - SL-SEC-01
+  - SL-COST-CODE-13
+  file: src/shop/silver_orders.py
+  anchor: 'args={"d": run_date}'
+  note: parameterised query with named columns
+- id: T02
+  checks:
+  - SL-COST-CODE-01
+  file: src/shop/silver_orders.py
+  anchor: limit(10).collect()
+  note: collect after a limit
+- id: T03
+  checks:
+  - SL-COST-CODE-14
+  - SL-COST-PLAN-01
+  file: src/shop/silver_orders.py
+  anchor: crossJoin(F.broadcast(calendar_flags))
+  note: intended one-row cross join, marked
+- id: T04
+  checks:
+  - SL-COST-CODE-13
+  file: sql/store_dim.sql
+  anchor: SELECT * FROM s;
+  note: star over a three-column CTE
+- id: T05
+  checks:
+  - SL-COST-CODE-20
+  file: sql/cleanup.sql
+  anchor: DELETE FROM bronze.events
+  note: DELETE with a WHERE
+- id: T06
+  checks:
+  - SL-SECRET-01
+  - SL-SECRET-03
+  file: dbt_shop/profiles.yml
+  anchor: env_var('DBT_DATABRICKS_TOKEN')
+  note: token from an environment variable
+- id: T07
+  checks:
+  - SL-COST-CONFIG-03
+  - SL-COST-CONFIG-08
+  file: resources/jobs.yml
+  anchor: 'name: gold_kpis'
+  note: job has tags and a timeout
+- id: T08
+  checks:
+  - SL-COST-CONFIG-05
+  file: resources/jobs.yml
+  anchor: 'continuous: false'
+  note: triggered pipeline
+- id: T09
+  checks:
+  - SL-SEM-03
+  file: sql/metric_view_finance.sql
+  anchor: 'expr: SUM(profit) / SUM(amount)'
+  note: ratio of sums
+- id: T10
+  checks:
+  - SL-CLEAN-07
+  file: src/shop/config.py
+  anchor: FRAUD_LIMIT = 100
+  note: named constant
+- id: T11
+  checks:
+  - SL-TEST-06
+  file: tests/test_silver_orders.py
+  anchor: 'assert got == {1: True, 2: False}'
+  note: compares values
+- id: T12
+  checks:
+  - SL-TEST-02
+  file: src/shop/silver_orders.py
+  anchor: def clean_orders(
+  note: pure and tested
+- id: T13
+  checks:
+  - SL-TEST-02
+  file: src/shop/silver_orders.py
+  anchor: def tag_big_orders(
+  note: pure and tested
+- id: T14
+  checks:
+  - SL-CLEAN-27
+  - SL-CLEAN-28
+  file: dbt_shop/models/marts/dim_customers.sql
+  anchor: from {{ ref('stg_customers') }}
+  note: reads a model
+- id: T15
+  checks:
+  - SL-CLEAN-27
+  file: dbt_shop/models/staging/stg_orders.sql
+  anchor: from {{ source('bronze', 'orders') }}
+  note: staging reads a declared source
+- id: T16
+  checks:
+  - SL-SEM-06
+  file: sql/metric_view_finance.sql
+  anchor: '    comment: Calendar month of the order'
+  note: described dimension

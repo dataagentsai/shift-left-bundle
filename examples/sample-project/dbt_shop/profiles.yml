@@ -1,0 +1,9 @@
+dbt_shop:
+  target: dev
+  outputs:
+    dev:
+      type: databricks
+      host: adb-1234567890123456.7.azuredatabricks.net
+      http_path: /sql/1.0/warehouses/abc123
+      schema: dbt_dev
+      token: "{{ env_var('DBT_DATABRICKS_TOKEN') }}"
