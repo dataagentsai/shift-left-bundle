@@ -150,3 +150,22 @@ def test_repo_review_plugin_matches_the_builtin_checks(tmp_path):
     assert results["SL-SETUP-08"] is True                       # tests folder exists
     assert isinstance(results["SL-SETUP-07"], str)              # SQL present, not linted
     assert plug.repo_review_families()["shiftleft"]["name"].startswith("Shift-left")
+
+
+JSCPD_CASES = [
+    # name, report, expected (check, file, line, message start)
+    ("no copies", {"duplicates": []}, []),
+    ("one copy, reported on the second file", {"duplicates": [{"format": "python", "lines": 23,
+        "firstFile": {"name": "nb/a.py", "start": 32}, "secondFile": {"name": "nb/b.py", "start": 24}}]},
+     [("SL-CPLX-05", "nb/b.py", 24, "23 lines copied from nb/a.py:32")]),
+    ("SQL copy", {"duplicates": [{"format": "sql", "lines": 8,
+        "firstFile": {"name": "sql/x.sql", "start": 1}, "secondFile": {"name": "sql/y.sql", "start": 5}}]},
+     [("SL-CPLX-05", "sql/y.sql", 5, "8 lines copied from sql/x.sql:1")]),
+]
+
+
+@pytest.mark.parametrize("name, report, expected", JSCPD_CASES, ids=[c[0] for c in JSCPD_CASES])
+def test_jscpd_parse(tmp_path, name, report, expected):
+    from shiftleft.adapters import jscpd
+    got = [(f.check, f.file, f.line, f.message[:len(e[3])]) for f, e in zip(jscpd.parse(report, tmp_path), expected)]
+    assert got == expected and len(jscpd.parse(report, tmp_path)) == len(expected)

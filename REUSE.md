@@ -144,9 +144,10 @@ rules announcement (8 rules, then 5 more).
 | `master` and `appName` set on the session | — | **Drop** | Wrong for Databricks, where the platform owns the session |
 | groupByKey instead of reduceByKey (RDD) | — | **Drop** | RDD code is rare in new Databricks work |
 | Bugs found by type flow (wrong argument count, non-callable, missing attribute) | none; Ruff has no type checker | **Drop for now** (SL-066 trial, 3 Nov) | pyright basic found 0 real bugs on both repos and false-alarmed on PySpark's own types; retry on typed library code |
-| Duplicate code | SL-CPLX-05, trial not finished | **Pursue** (SL-067) | Finish the trial |
+| Duplicate code | SL-CPLX-05 with jscpd, adopted 3 Nov | **Pursue, done** (SL-067) | jscpd and pylint R0801 gave the same results on three repos; jscpd also reads SQL and is MIT |
 | Taint analysis across functions (paid editions) | SL-SEC-01 is per statement, now split into config vs value (refine) | **Pursue, small** (SL-069) | Follow a widget or parameter one call deep; full taint stays out of scope |
 | IaC and CI rules (Terraform, Docker, Kubernetes, GitHub Actions) | Checkov for Terraform; bundle rules for databricks.yml | **Pursue CI only** (SL-068, trial zizmor) | CI workflows run with secrets |
 | Quality gate on new code, dashboard over time | baseline + diff-cover + health page with trend; portfolio view is SL-063 | Have (portfolio later) | No server needed |
 | Dependency vulnerabilities (paid add-on) | osv-scanner, open | Have, ahead | |
 | Spark SQL / Databricks SQL, cost, bundles, purity, metric views, dbt, notebooks' `%run` | ours | Sonar has none | This is the reason the bundle exists |
+| (not in Sonar) Window ordered with no partition: every row through one task | SL-COST-CODE-25, built 3 Nov (Python and SQL) | **Pursue, done** (SL-065b) | Found reading the e-commerce repo |

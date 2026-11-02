@@ -540,6 +540,16 @@ planted:
   file: src/shop/customer_report.py
   anchor: return (orders
   note: four withColumn calls in one chain
+- id: P107
+  check: SL-COST-CODE-25
+  file: src/shop/customer_report.py
+  anchor: return customers.withColumn("spend_rank", F.dense_rank().over(by_spend))
+  note: ranking over every customer with no partition (added 3 Nov, SL-065b)
+- id: P108
+  check: SL-CPLX-05
+  file: src/shop/refunds.py
+  anchor: return (exchanges
+  note: the refund summary copied for exchanges (added 3 Nov, SL-067)
 traps:
 - id: T01
   checks:

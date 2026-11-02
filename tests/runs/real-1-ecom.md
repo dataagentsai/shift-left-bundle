@@ -52,3 +52,7 @@ folder and no CI. Scanned with `shiftleft scan . --stage all`, in about 3.5 seco
 ## Update 3 Nov: values traced (SL-069)
 
 With `taint.py`, blocking drops from 4 to 1: `00_setup.py:173` now says "untrusted input reaches the SQL text: widget at line 165; widget at line 166". The three watermark queries are warnings that point at the table read in `_utils.py:109`.
+
+## Update 3 Nov: two more checks
+
+SL-COST-CODE-25 finds the three RFM `ntile` scores in `61_gold_customer_ltv.py`, each ranked over every customer with no partition. jscpd finds `40_silver_products_sparksql.py` repeating 23 lines of `40_silver_products.py` (the Spark SQL teaching variant; report only).

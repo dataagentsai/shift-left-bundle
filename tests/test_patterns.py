@@ -86,7 +86,7 @@ CASES = [
     # ---- SL-CLEAN-30 ordered window with no frame
     ("sum over ordered window", {"m.py": 'w = Window.partitionBy("c").orderBy("d")\ndf.withColumn("t", F.sum("a").over(w))\n'},
      ["SL-CLEAN-30"]),
-    ("inline ordered window", {"m.py": 'df.withColumn("t", F.max("a").over(Window.orderBy("d")))\n'}, ["SL-CLEAN-30"]),
+    ("inline ordered window", {"m.py": 'df.withColumn("t", F.max("a").over(Window.orderBy("d")))\n'}, ["SL-CLEAN-30", "SL-COST-CODE-25"]),
     ("frame stated", {"m.py": "w = Window.partitionBy('c').orderBy('d').rowsBetween(Window.unboundedPreceding, 0)\n"
                               "df.withColumn('t', F.sum('a').over(w))\n"}, []),
     ("frame added to a named spec", {"m.py": "w = Window.partitionBy('c').orderBy('d')\nw2 = w.rowsBetween(-2, 0)\n"
@@ -94,6 +94,17 @@ CASES = [
     ("ranking needs no frame (SCD2 pattern)", {"m.py": "w = Window.partitionBy('k').orderBy(F.col('ts').desc())\n"
                                                        "df.withColumn('rn', F.row_number().over(w))\n"}, []),
     ("unordered window is the whole partition", {"m.py": "w = Window.partitionBy('c')\ndf.withColumn('t', F.sum('a').over(w))\n"}, []),
+    # ---- SL-COST-CODE-25 window with no partition
+    ("rank over the whole table", {"m.py": "w = Window.orderBy(F.col('rev').desc())\ndf.withColumn('r', F.ntile(5).over(w))\n"},
+     ["SL-COST-CODE-25"]),
+    ("running sum over the whole table (both checks)", {"m.py": "df.withColumn('t', F.sum('a').over(Window.orderBy('d')))\n"},
+     ["SL-CLEAN-30", "SL-COST-CODE-25"]),
+    ("partitioned rank is fine", {"m.py": "w = Window.partitionBy('c').orderBy('d')\ndf.withColumn('r', F.row_number().over(w))\n"}, []),
+    ("SQL OVER ORDER BY", {"q.sql": "SELECT a,\n  row_number() OVER (ORDER BY a) AS r\nFROM t\n"}, ["SL-COST-CODE-25"]),
+    ("SQL OVER PARTITION BY is fine", {"q.sql": "SELECT row_number() OVER (PARTITION BY c ORDER BY a) FROM t\n"}, []),
+    ("SQL OVER ORDER BY in a comment is ignored", {"q.sql": "-- row_number() OVER (ORDER BY a)\nSELECT 1\n"}, []),
+    ("%sql cell OVER ORDER BY", {"nb.py": NB + "# MAGIC %sql\n# MAGIC SELECT rank() OVER (ORDER BY x) FROM t\n"},
+     ["SL-COST-CODE-25"]),
     # ---- SL-CLEAN-31 join type
     ("join with no how", {"m.py": 'o.join(c, "customer_id")\n'}, ["SL-CLEAN-31"]),
     ("join with on= and no how", {"m.py": 'o.join(c, on="customer_id")\n'}, ["SL-CLEAN-31"]),

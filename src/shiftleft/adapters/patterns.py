@@ -19,6 +19,7 @@ import json
 import re
 
 from ..model import Finding, ScanResult
+from ._notebooks import sql_cells
 from ._util import files, rel
 
 NAME = "patterns"
@@ -279,6 +280,10 @@ def _rules_pyspark(tree, cell, rp, cfg):
             if agg[0] in AGGREGATES and spec and "orderBy" in spec and not FRAME_CALLS & set(spec):
                 add("SL-CLEAN-30", node, "sl-window-no-frame",
                     f"{agg[0]}() over an ordered window with no frame is a running total; state rowsBetween or rangeBetween")
+            # SL-COST-CODE-25: ordered window with no partition (every row goes through one task)
+            if spec and spec[0] == "Window" and "orderBy" in spec and "partitionBy" not in spec:
+                add("SL-COST-CODE-25", node, "sl-window-no-partition",
+                    f"{agg[0] or 'function'}() over a window ordered with no partitionBy: every row goes through one task")
 
         # SL-CLEAN-31: join type left to the default
         if last == "join" and "path" not in ch and isinstance(node.func, ast.Attribute) \
@@ -382,4 +387,30 @@ def scan(ctx):
         if not parsed and p.suffix == ".py":
             notes.append(f"{rp}: could not parse")
     out += runtime_findings(ctx.project, cfg)
+    out += sql_window_findings(ctx.project)
     return ScanResult(NAME, out, notes)
+
+
+SQL_OVER_ORDER = re.compile(r"\bOVER\s*\(\s*ORDER\s+BY\b", re.I)
+
+
+def _sql_window_hits(sql):
+    """Line offsets (0-based) of OVER (ORDER BY ...) with no PARTITION BY, comments ignored."""
+    code = re.sub(r"--[^\n]*", lambda m: " " * len(m[0]), sql)
+    code = re.sub(r"/\*.*?\*/", lambda m: re.sub(r"[^\n]", " ", m[0]), code, flags=re.S)
+    return [code.count("\n", 0, m.start()) for m in SQL_OVER_ORDER.finditer(code)]
+
+
+def sql_window_findings(project):
+    """SL-COST-CODE-25 in SQL: .sql files and notebook %sql cells."""
+    out = []
+    msg = "window ordered with no PARTITION BY: every row goes through one task"
+    for p in files(project, "*.sql"):
+        for k in _sql_window_hits(p.read_text(errors="ignore")):
+            out.append(Finding("SL-COST-CODE-25", rel(project, p), k + 1, NAME, "sl-window-no-partition", msg))
+    for p in files(project, "*.py", "*.ipynb"):
+        for start, body in sql_cells(p):
+            for k in _sql_window_hits(body):
+                line = start if p.suffix == ".ipynb" else start + k
+                out.append(Finding("SL-COST-CODE-25", rel(project, p), line, NAME, "sl-window-no-partition", msg))
+    return out

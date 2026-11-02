@@ -32,3 +32,8 @@ def report_columns(orders: DataFrame) -> DataFrame:
             .withColumn("channel_note", F.lit(None).cast("string"))
             .withColumn("net", F.col("amount") - F.col("discount"))
             .withColumn("tax", F.col("net") * 0.18))
+
+
+def spend_rank(customers: DataFrame) -> DataFrame:
+    by_spend = Window.orderBy(F.col("lifetime_spend").desc())
+    return customers.withColumn("spend_rank", F.dense_rank().over(by_spend))

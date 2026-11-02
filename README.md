@@ -4,7 +4,7 @@ Fail fast on PySpark, Python and Databricks SQL code before it runs: cost, secur
 
 Guide: <https://cleandataengineering.ai/learn/shift-left/>
 
-**Status:** the spec (0.3) is written: 136 checks in 13 families, for Python, PySpark, notebooks, SQL, dbt, materialized views and metric views. `examples/scd2` shows SCD2, idempotency, duplicates, dropped records and cartesian joins tested offline. `examples/sample-project` is a shop with 101 planted problems and 16 traps; `scripts/score.py` scores any run against the hidden key (`tests/RESULTS.md`). The runner works: `shiftleft scan PATH --stage pr` (102 of 106 caught on the sample, no false alarms; see below). See `TODO.md`.
+**Status:** the spec (0.3) is written: 137 checks in 13 families, for Python, PySpark, notebooks, SQL, dbt, materialized views and metric views. `examples/scd2` shows SCD2, idempotency, duplicates, dropped records and cartesian joins tested offline. `examples/sample-project` is a shop with 101 planted problems and 16 traps; `scripts/score.py` scores any run against the hidden key (`tests/RESULTS.md`). The runner works: `shiftleft scan PATH --stage pr` (104 of 108 caught on the sample, no false alarms; see below). See `TODO.md`.
 
 ## Use it
 

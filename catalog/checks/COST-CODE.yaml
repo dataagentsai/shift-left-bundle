@@ -383,3 +383,19 @@
   dac: [COST-02]
   cites: []
   related: [SL-COST-CODE-05]
+- id: SL-COST-CODE-25
+  status: draft
+  since: 0.3.0
+  title: Window ordered over the whole dataset
+  level: SHOULD
+  statement: A window function SHOULD be partitioned unless the dataset is known to be small, because an ordered window with no partition moves every row into one task.
+  why: A ranking over all customers with no partition ran in one task on one core while the rest of the cluster sat idle, and spilled to disk once the table grew.
+  fix: Partition the window by a key; if a global rank is really needed, rank within partitions first or mark the small dataset with the allow marker.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [pyspark, notebook, sql]
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-CLEAN-30]

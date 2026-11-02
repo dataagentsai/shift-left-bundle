@@ -18,7 +18,8 @@ tools:
   ruff: {licence: MIT, kind: python lint, format and security}
   complexipy: {licence: MIT, kind: cognitive complexity}
   vulture: {licence: MIT, kind: dead code}
-  pylint: {licence: GPL-2.0 (tool only, not linked), kind: duplicate code}
+  pylint: {licence: GPL-2.0 (tool only, not linked), kind: module length (SL-CPLX-08 trial); no longer used for duplicate code}
+  jscpd: {licence: MIT, kind: copied code in Python and SQL (Node tool, optional like gitleaks); chosen over pylint R0801 on 3 Nov: same results on three repos, also reads SQL, MIT}
   opengrep: {licence: LGPL-2.1, kind: pattern rules (our own rules only)}
   sqlfluff: {licence: MIT, kind: SQL lint and format, dialect databricks}
   sqlglot: {licence: MIT, kind: SQL syntax tree for our own rules}
@@ -127,7 +128,7 @@ checks:
   SL-CPLX-02: {tool: complexipy, rules: [cognitive complexity], status: adopt}
   SL-CPLX-03: {tool: ruff, rules: [PLR0915], status: adopt}
   SL-CPLX-04: {tool: vulture, rules: [unused function, unused class, unreachable code], status: adopt, note: "run 1 (2 Nov): 28 findings, 1 planted; a library's public functions look unused because jobs call them from config. Nightly report until entry points are read from databricks.yml (SL-058)"}
-  SL-CPLX-05: {tool: pylint, rules: [R0801], status: trial, note: "or jscpd; pick on the sample"}
+  SL-CPLX-05: {tool: jscpd, rules: [python, sql], status: adopt, note: "trial 3 Nov: jscpd 5.4.1 and pylint R0801 found the same single copy on two real repos and none falsely; comments ignored (mode weak)"}
   # ---- clean code
   SL-CLEAN-01: {tool: ruff, rules: [RET505, RET506, RET507, RET508, SIM102, PLR1702], status: adopt, note: "checked 2 Nov 2026: RET505 fires on the nested discount example"}
   SL-CLEAN-02: {tool: ruff, rules: [PLR0913], status: adopt}
@@ -176,6 +177,7 @@ checks:
   SL-CLEAN-31: {tool: patterns, rules: [sl-join-no-how], status: build, note: "join(other, on) with no how; Sonar S7192"}
   SL-CLEAN-32: {tool: patterns, rules: [sl-dedupe-all-columns], status: build, note: "dropDuplicates() / drop_duplicates() with no columns; Sonar S7182"}
   SL-COST-CODE-24: {tool: patterns, rules: [sl-chained-withcolumn], status: build, note: "more than patterns.max_chained_withcolumn withColumn calls in one chain; Sonar S7191"}
+  SL-COST-CODE-25: {tool: patterns, rules: [sl-window-no-partition], status: build, note: "Window.orderBy(...) with no partitionBy used in .over(), and OVER (ORDER BY ...) in .sql files and %sql cells; found reading the e-commerce repo; Sonar has no rule for it"}
   SL-SETUP-10: {tool: dbt-bouncer, rules: [check_model_description_populated], status: adopt, note: "MO021; dbt-score not needed"}
   SL-SEM-01: {tool: metricview, rules: [yaml-schema-1.1, expression-parse], status: build, note: "YAML spec 1.1 per Databricks docs (checked 2 Nov 2026); dbt semantic models via dbt parse"}
   SL-SEM-02: {tool: metricview, rules: [measure-no-aggregate], status: build}
@@ -335,6 +337,9 @@ purity:
     column_expression: ["pyspark.sql.functions.* except the clock and randomness entries", F.col, F.lit, F.when, F.expr, Window]
     standard_pure: [math, re, decimal, fractions, itertools, functools, operator, string, textwrap, json.loads, json.dumps]
   test_guard_patch: [pyspark.sql.DataFrameReader, pyspark.sql.DataFrameWriter, pyspark.sql.SparkSession.table, pyspark.sql.SparkSession.sql, delta.tables.DeltaTable, dbutils]
+
+# Copied code (adapters/jscpd.py, SL-CPLX-05).
+duplicates: {min_lines: 6, min_tokens: 50, formats: [python, sql]}
 
 # Settings for our own pattern rules (adapters/patterns.py).
 patterns:
