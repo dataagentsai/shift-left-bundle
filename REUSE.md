@@ -123,3 +123,30 @@ Ruff 0.17.3 has 973 rules (832 stable) from 60 linters. Starter profile 404 rule
 | Missing setup | repo-review (as a plugin host) | the data-repo checks | teams already on repo-review see them in one report |
 | Test guard and kit | pytest, pyspark.testing | the `pure` marker, five property checks | nothing blocks table I/O inside unit tests |
 | Test drafts | pytest parametrize | the draft generator | Hypothesis ghostwriter and Pynguin don't build DataFrames from schemas |
+
+## Sonar, rule by rule: what it covers that we don't (2 Nov 2026, after the first real repo)
+
+D1 dropped SonarQube as a tool (a server and a database; pull-request analysis and taint analysis are in paid
+editions). This checks the rules, not the tool. Sources: rules.sonarsource.com (Python, 414 rules) and Sonar's PySpark
+rules announcement (8 rules, then 5 more).
+
+| Sonar covers | We have | Verdict | Reason |
+|---|---|---|---|
+| Complex expression inline in withColumn / filter / when (S7196) | SL-CLEAN-26 | Have | Own pattern rule |
+| toPandas avoided | SL-COST-CODE-01 (SparkDoctor SDK012) | Have | |
+| `lit(None)` for an empty column with no cast (S7195) | — | **Pursue** (SL-065) | A NullType column fails the Delta write: a bug, not style |
+| Window ordered with no explicit frame (S7181) | — | **Pursue** (SL-065) | The default frame changes when orderBy is added; silent wrong running totals |
+| Join with no `how` (S7192) | — | **Pursue** (SL-065, report) | Makes the join type a decision, not a default |
+| `dropDuplicates()` with no columns (S7182) | — | **Pursue** (SL-065, warn) | Usually meant a key; a full-row dedupe hides duplicates by key |
+| Chained `withColumn` that could be `withColumns` (S7191) | SL-COST-CODE-05 covers only the loop | **Pursue** (SL-065, report) | Cheap to add next to the loop rule |
+| DataFrame reused with no cache (S7189) | SL-COST-CODE-07 is the opposite (cached, used once) | **Drop** | On Databricks, caching advice is workload-specific; serverless ignores cache |
+| pandas-on-Spark reserved column names (S7187) | — | **Drop** | Rare in our target repos |
+| `master` and `appName` set on the session | — | **Drop** | Wrong for Databricks, where the platform owns the session |
+| groupByKey instead of reduceByKey (RDD) | — | **Drop** | RDD code is rare in new Databricks work |
+| Bugs found by type flow (wrong argument count, non-callable, missing attribute) | none; Ruff has no type checker | **Pursue** (SL-066, trial pyright basic) | The largest real gap: Sonar's "bugs" category |
+| Duplicate code | SL-CPLX-05, trial not finished | **Pursue** (SL-067) | Finish the trial |
+| Taint analysis across functions (paid editions) | SL-SEC-01 is per statement, now split into config vs value (refine) | **Pursue, small** (SL-069) | Follow a widget or parameter one call deep; full taint stays out of scope |
+| IaC and CI rules (Terraform, Docker, Kubernetes, GitHub Actions) | Checkov for Terraform; bundle rules for databricks.yml | **Pursue CI only** (SL-068, trial zizmor) | CI workflows run with secrets |
+| Quality gate on new code, dashboard over time | baseline + diff-cover + health page with trend; portfolio view is SL-063 | Have (portfolio later) | No server needed |
+| Dependency vulnerabilities (paid add-on) | osv-scanner, open | Have, ahead | |
+| Spark SQL / Databricks SQL, cost, bundles, purity, metric views, dbt, notebooks' `%run` | ours | Sonar has none | This is the reason the bundle exists |

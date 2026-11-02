@@ -15,7 +15,7 @@ except Tier 7 (teaching), which runs alongside.
 | 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | done 2 Nov: 8 adapters, run 1 = 34/101, 0 false alarms, hook and baseline proven |
 | 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | done 2 Nov: run 2 = 64/101, 0 false alarms |
 | 5 | The delta: purity report, empty-table plan harness, gap report | done 2 Nov: run 5 = 88/101; with our own pattern rules (SL-064) run 6 = 97/101, 0 false alarms |
-| 6 | Real repo, cut the noise, run 2 | next |
+| 6 | Real repo, cut the noise, run 2 | in progress: e-commerce repo scanned, 10 noise rules (276 → 172 findings, 19 → 4 blocking, all 4 correct); sample still 97/101, 0 false alarms; Sonar gaps SL-065–069 next |
 | 7 | Teach and release: site pages, Claude skill, v0.1 tag | alongside |
 | 8 | Azure binding | later |
 
@@ -105,9 +105,14 @@ except Tier 7 (teaching), which runs alongside.
 
 | Id | Task | Status |
 |---|---|---|
-| SL-060 | Run on a real repo (data-platform-framework or Project5-DLTStreamingProject) | — |
-| SL-061 | Cut noise: fix or drop any rule with many false alarms | — |
-| SL-062 | Feed gaps back into the spec; run 3 | — |
+| SL-060 | Run on a real repo (data-platform-framework or Project5-DLTStreamingProject) | done 2 Nov: ecomsimpledataplatformusingdatabricks (13 notebooks), tests/runs/real-1-ecom.md |
+| SL-061 | Cut noise: fix or drop any rule with many false alarms | done 2 Nov: src/shiftleft/refine.py, 10 rules switched on in the binding (`refine:`), counted in run notes; 27 table-driven tests |
+| SL-062 | Feed gaps back into the spec; run 3 | partly 2 Nov: the Sonar comparison (REUSE.md) gave SL-065–069 |
+| SL-065 | PySpark rules Sonar has and we lack, as pattern rules: `lit(None)` with no cast (a NullType column breaks the write), window ordered with no explicit frame, join with no `how`, `dropDuplicates()` with no columns, chained `withColumn` that could be one `withColumns` | — |
+| SL-066 | Type-flow bugs (wrong argument count, calling a non-callable, attribute that does not exist): trial pyright in basic mode, Databricks globals declared | — |
+| SL-067 | Duplicate code: finish the SL-CPLX-05 trial (pylint R0801 or jscpd) | — |
+| SL-068 | CI workflow security (unpinned actions, script injection in GitHub Actions): trial zizmor | — |
+| SL-069 | Taint across functions (a widget or parameter reaching SQL through a helper): extend sql-identifiers-only to follow one call level | — |
 | SL-063 | Portfolio view for leaders across repos (D9 level 3), after the first real repo | — |
 
 ## Tier 7: teach and release (runs alongside)

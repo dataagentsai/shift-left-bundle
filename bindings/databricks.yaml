@@ -343,3 +343,17 @@ patterns:
     "15.4": {spark: "3.5", python: "3.11"}
     "16.4": {spark: "3.5", python: "3.12"}
     "17.3": {spark: "4.0", python: "3.12"}
+
+# Noise rules (src/shiftleft/refine.py), learned on the first real repo (Tier 6, SL-061). Each drop or lowered gate
+# is counted in the run notes. Remove a name to switch its rule off.
+refine:
+  - run-target-names        # F821 for names that come from a %run notebook: drop
+  - sql-identifiers-only    # f-string SQL that inserts only ALL_CAPS config (table names): report, and one finding per statement
+  - random-not-security     # S311 random in data code: report
+  - print-in-notebook       # T201 in a notebook: report (modules still warn)
+  - collect-one-row         # collect() after a whole-table agg(): drop
+  - merge-builder-chain     # Delta merge builder counted as a long chain: drop
+  - display-cell-sort       # ORDER BY with no LIMIT in a SELECT-only %sql cell: report
+  - ddl-in-loop             # spark.sql in a loop that only runs CREATE / DROP / ALTER: drop
+  - display-is-output       # display(...) counted as a discarded action: drop
+  - markdown-unicode        # RUF001-003 on # MAGIC markdown lines: drop

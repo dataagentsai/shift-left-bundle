@@ -12,9 +12,10 @@ Score any run with `uv run scripts/score.py findings.json`.
 | 3 | 2 Nov 2026 | run 2 + purity classifier (own) joined with the tests folder | 72/101 | 74/101 | 0/16 | 79 |
 | 5 | 2 Nov 2026 | run 3 + metric view checks, dbt parse + dbt-bouncer, empty-table plan check, dead code grouped by module | 88/101 | 90/101 | 0/16 | 64 |
 | 6 | 2 Nov 2026 | run 5 + our own pattern rules (secret printed, personal data shown, remote test session, count-only test, logic in notebooks, column as attribute, %run chain, inline condition, runtime match) | 97/101 | 98/101 | 0/16 | 66 |
+| 7 | 2 Nov 2026 | run 6 + noise rules learned on the first real repo (refine.py) | 97/101 | 98/101 | 0/16 | 66 |
 | 2 | 2 Nov 2026 | run 1 + CostLens oss-core, SparkDoctor and 2 pyspark-antipattern rules, our materialized-view, grant and bundle rules, notebook %sql extraction | 64/101 | 66/101 | 0/16 | 65 |
 
-Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`, `runs/run-5-tier5.md`, `runs/run-6-patterns.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
+Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`, `runs/run-5-tier5.md`, `runs/run-6-patterns.md`. Real repos: `runs/real-1-ecom.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
 
 ## What run 0 taught us
 

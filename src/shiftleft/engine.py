@@ -4,6 +4,7 @@ import json
 import re
 from pathlib import Path
 
+from . import refine
 from .adapters import REGISTRY
 from .model import STAGE_ORDER, Context
 
@@ -96,5 +97,7 @@ def run(ctx: Context, baseline=frozenset()):
             missing.append(m.NAME)
         raw += res.findings
         notes += res.notes
+    raw, refined = refine.apply(raw, ctx.project, ctx.binding.get("refine") or [])
+    notes += refined
     findings, more = finalise(raw, ctx, baseline)
     return findings, notes + more, missing
