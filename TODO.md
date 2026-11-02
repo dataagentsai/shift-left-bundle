@@ -86,14 +86,18 @@ except Tier 7 (teaching), which runs alongside.
 
 | Id | Task | Status |
 |---|---|---|
-| SL-050 | Purity report: pure / impure / unknown per function, call chain, counts, refactor hint per impure-could-be-pure | — |
+| SL-050 | Purity report: pure / impure / unknown per function, call chain, counts, refactor hint per impure-could-be-pure | done 2 Nov: src/shiftleft/purity.py + `shiftleft purity`; run 3 PURE 4/4 |
 | SL-051 | Test-time purity fixture: Spark reads, writes and catalog calls fail inside pure-function tests; run-twice check | — |
 | SL-052 | Empty-table plan harness: build empty DataFrames from schemas (contracts or DDL) and EXPLAIN each job's transforms | — |
 | SL-053 | Gap report: repo-review plugins for data repos + sp-repo-review + OpenSSF Scorecard + per-function gaps | — |
-| SL-054 | Joined view: complex-and-untested, pure-but-untested | — |
+| SL-054 | Joined view: complex-and-untested, pure-but-untested | partly 2 Nov: pure-but-untested and module-without-tests done; complex-and-untested waits for coverage data |
 | SL-055 | Run 2 on the sample with the delta; record the score | — |
 | SL-056 | Draft tests for untested pure functions: snapshot tests (syrupy) from small dev samples, Hypothesis ghostwriter skeletons with schema-to-strategy helper, Claude-drafted case tables; keep a drafted test only if mutation testing shows it catches bugs. Pynguin on trial | — |
 | SL-058 | Dead code with entry points: read job entry points and notebook calls from databricks.yml so vulture stops flagging library functions | — |
+| SL-059 | Pull-request summary comment: blocking count and the top 5 to fix, posted by the CI templates (D9 level 1) | — |
+| SL-060a | Repo health page: static HTML per repo as a CI artifact; purity, untested pure functions, coverage, complexity hot spots, what is missing, findings by family, trend vs last run (D9 level 2) | — |
+| SL-061a | Metric view checks (SEM family): extract the YAML, validate against spec 1.1, parse expressions, the seven SEM rules | — |
+| SL-062a | dbt structure: dbt-bouncer and dbt-score on `dbt parse` output (offline) for TEST-07/08, CLEAN-27/28, SETUP-10 | — |
 | SL-057 | Test kit from examples/scd2 into the package: idempotency, uniqueness, nothing dropped, fan-out, cartesian; case tables for SCD2, dedupe, incremental, late data | — |
 
 ## Tier 6: real repo
@@ -103,6 +107,7 @@ except Tier 7 (teaching), which runs alongside.
 | SL-060 | Run on a real repo (data-platform-framework or Project5-DLTStreamingProject) | — |
 | SL-061 | Cut noise: fix or drop any rule with many false alarms | — |
 | SL-062 | Feed gaps back into the spec; run 3 | — |
+| SL-063 | Portfolio view for leaders across repos (D9 level 3), after the first real repo | — |
 
 ## Tier 7: teach and release (runs alongside)
 

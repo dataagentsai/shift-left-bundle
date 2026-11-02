@@ -271,7 +271,7 @@ skills/         a Claude skill that reads REVIEW.md and proposes fixes (LLM only
 <tr><td>8</td><td>Azure binding; split catalog repo when stable</td><td>later</td></tr>
 </table></div>
 
-<h2 id="decide">9. Decisions (all agreed as recommended, 2 Nov 2026)</h2>
+<h2 id="decide">9. Decisions (all agreed as recommended, 2 Nov 2026; D9 added and agreed the same day)</h2>
 <div class="wrap"><table>
 <tr><th>#</th><th>Question</th><th>Options</th><th>Recommendation</th></tr>
 <tr><td>D1</td><td>SonarQube?</td><td>Use it / don't, emit SARIF</td><td class="rec">Don't. SARIF lets a Sonar shop import us.</td></tr>
@@ -282,6 +282,7 @@ skills/         a Claude skill that reads REVIEW.md and proposes fixes (LLM only
 <tr><td>D6</td><td>Purity report in v0?</td><td>Yes / later</td><td class="rec">Yes. It is the new idea, and it drives the test advice.</td></tr>
 <tr><td>D7</td><td>Coverage gate</td><td>Whole repo / changed lines only</td><td class="rec">Changed lines, 80%, with mutation score nightly on pure functions only.</td></tr>
 <tr><td>D8</td><td>Name</td><td>shift-left-bundle / preflight / something else</td><td class="rec">Keep "shift-left-bundle" until the spec settles.</td></tr>
+<tr><td>D9</td><td>How do we report?</td><td>Per pull request only / three levels: pull request, repo health page, portfolio view</td><td class="rec">Three levels, agreed 2 Nov 2026. 1: findings on the changed lines plus a short summary comment (built). 2: a static HTML health page per repo as a CI artifact, no server: purity, untested pure functions, coverage, complexity, what is missing, findings by area, trend (Tier 5). 3: a portfolio view for leaders, after a real repo is running (Tier 6).</td></tr>
 </table></div>
 </main>
 </body>

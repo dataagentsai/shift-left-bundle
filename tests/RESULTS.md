@@ -9,9 +9,10 @@ Score any run with `uv run scripts/score.py findings.json`.
 | 0 | 2 Nov 2026 | Ruff 0.17.3, starter profile, default settings | 17/101 | 19/101 | 0/16 | 33 |
 | 0b | 2 Nov 2026 | Ruff 0.17.3, starter profile, `templates/ruff.toml` | 17/101 | 19/101 | 0/16 | 8 |
 | 1 | 2 Nov 2026 | `shiftleft scan --stage all`: Ruff, SQLFluff, gitleaks (+ our rules), osv-scanner, vulture, complexipy, nbstripout, repo checks | 34/101 | 39/101 | 0/16 | 56 |
+| 3 | 2 Nov 2026 | run 2 + purity classifier (own) joined with the tests folder | 72/101 | 74/101 | 0/16 | 79 |
 | 2 | 2 Nov 2026 | run 1 + CostLens oss-core, SparkDoctor and 2 pyspark-antipattern rules, our materialized-view, grant and bundle rules, notebook %sql extraction | 64/101 | 66/101 | 0/16 | 65 |
 
-Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
+Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
 
 ## What run 0 taught us
 
@@ -55,3 +56,15 @@ Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-run
 - **Still missing, as planned**: plans (needs the empty-table harness), purity, tests, metric views, dbt structure.
   That is Tier 5. Two left in cost: a SELECT * inside an f-string query (no tool reads f-strings) and the
   dependency-runtime match (SL-DEP-05).
+
+## What run 3 taught us
+
+- **Purity is detectable from the syntax tree for this kind of code**: 31 functions, 15 pure, 13 impure, 3 unknown.
+  All 4 planted purity problems and 4 test problems (pure but untested, module with no test file) were caught, with
+  no false alarms; the 2 tested pure functions in the traps were left alone.
+- **Unknown is rare and honest here**: an inner UDF variable, `eval`, `subprocess`. None was wrongly called pure.
+- **Three rules sharpened the classifier**: a chained call is judged by its own final method (so the `filter` in
+  `spark.table(t).filter(...)` counts as logic); changing an argument in place is impure but building a local list is
+  not; "could be pure" needs both a read or write and some logic, so a pure writer shell is not flagged.
+- **Unplanned findings grew to 79**, mostly real by the catalog's own rules (12 pure functions untested, actions in
+  logic). They are warnings, and the baseline absorbs them on adoption.

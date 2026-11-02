@@ -45,7 +45,7 @@ tools:
   bundle-validate: {licence: Databricks CLI, kind: databricks bundle validate}
   costlens: {licence: Apache-2.0 oss-core, kind: cost rules for SQL, Python, plans and bundles; optional adapter}
   plan-harness: {licence: ours, kind: empty-table EXPLAIN on local PySpark}
-  purity: {licence: ours, kind: purity classifier and test-time guard}
+  purity: {licence: ours, kind: purity classifier over Python syntax trees (src/shiftleft/purity.py), joined with the tests folder; test-time guard in Tier 5}
   shiftleft-tests: {licence: ours, kind: rules over test files and coverage data}
 
 checks:
@@ -311,13 +311,13 @@ purity:
   clock: [datetime.now, datetime.utcnow, date.today, time.time, F.current_timestamp, F.current_date, F.now, F.localtimestamp]
   randomness: [random, uuid, secrets, numpy.random, F.rand, F.randn, F.uuid, F.shuffle, .sample, .randomSplit]
   environment: [os.environ, os.getenv, sys.argv, spark.conf.get]
-  output: [print, logging, logger, .show, display, displayHTML]
+  output: [print, logging, logger, log, .show, display, displayHTML]
   engine_action: [.count, .collect, .take, .head, .first, .toPandas, .toLocalIterator, .foreach, .foreachPartition, .isEmpty]
   engine_state: [.cache, .persist, .unpersist, .createOrReplaceTempView, .createGlobalTempView, spark.conf.set, .checkpoint, .localCheckpoint]
   global_state: [global, nonlocal, "assignment to an argument's attribute or item"]
   global_session: ["spark (module-level name, not a parameter)", SparkSession.getActiveSession, SparkSession.builder.getOrCreate]
   known_pure:
-    lazy_transform: [.select, .selectExpr, .filter, .where, .withColumn, .withColumns, .withColumnRenamed, .drop, .join, .groupBy, .agg, .union, .unionByName, .dropDuplicates, .distinct, .orderBy, .sort, .limit, .alias, .transform, .fillna, .na, .replace, .withWatermark]
+    lazy_transform: [.select, .selectExpr, .filter, .where, .withColumn, .withColumns, .withColumnRenamed, .drop, .join, .groupBy, .agg, .union, .unionByName, .crossJoin, .hint, .repartition, .coalesce, .dropna, .dropDuplicates, .distinct, .orderBy, .sort, .limit, .alias, .transform, .fillna, .na, .replace, .withWatermark]
     column_expression: ["pyspark.sql.functions.* except the clock and randomness entries", F.col, F.lit, F.when, F.expr, Window]
     standard_pure: [math, re, decimal, fractions, itertools, functools, operator, string, textwrap, json.loads, json.dumps]
   test_guard_patch: [pyspark.sql.DataFrameReader, pyspark.sql.DataFrameWriter, pyspark.sql.SparkSession.table, pyspark.sql.SparkSession.sql, delta.tables.DeltaTable, dbutils]
