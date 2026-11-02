@@ -12,8 +12,8 @@ except Tier 7 (teaching), which runs alongside.
 | 1 | Spec v0.1: the checks, written once, no product names | done 2 Nov: 90 checks, linter clean, 41 tests |
 | 1b | Spec 0.2: notebooks, dbt, materialized views, metric views (new SEM family), 20 more clean-code habits, Ruff profiles (404 / 600 rules), osv-scanner; SCD2 example with test kit; CI and container templates | done 2 Nov: 131 checks, 51 lint tests, example 27 tests |
 | 2 | Proof material: sample repo with planted problems and a hidden answer key | done 2 Nov: 101 planted, 16 traps; run 0 (Ruff only) 17/101, 0 false alarms |
-| 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | next |
-| 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | later |
+| 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | done 2 Nov: 8 adapters, run 1 = 34/101, 0 false alarms, hook and baseline proven |
+| 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | next |
 | 5 | The delta: purity report, empty-table plan harness, gap report | later |
 | 6 | Real repo, cut the noise, run 2 | later |
 | 7 | Teach and release: site pages, Claude skill, v0.1 tag | alongside |
@@ -66,13 +66,13 @@ except Tier 7 (teaching), which runs alongside.
 
 | Id | Task | Status |
 |---|---|---|
-| SL-030 | Runner skeleton: ports (Scanner, Reporter, Gate, Baseline), adapter registry chosen by the binding YAML | — |
-| SL-031 | Adapters (Ruff settings in templates/ruff.toml from run 0): Ruff (lint, clean code, security, C901), SQLFluff, sqlglot, Opengrep, gitleaks, pip-audit, Checkov | — |
-| SL-032 | Adapters: pytest + coverage.py + diff-cover, complexipy, import-linter, vulture | — |
-| SL-033 | Findings normalised to SARIF with our check ids; REVIEW.md in fix-first order | — |
-| SL-034 | Gate + baseline: block list, warn the rest, only new findings fail | — |
-| SL-035 | `.pre-commit-hooks.yaml` and the commit / PR / nightly / pre-deploy split | — |
-| SL-036 | Run 1 on the sample; record the score | — |
+| SL-030 | Runner skeleton: ports (Scanner, Reporter, Gate, Baseline), adapter registry chosen by the binding YAML | done 2 Nov: src/shiftleft (ports, registry, engine, cli) |
+| SL-031 | Adapters (Ruff settings in templates/ruff.toml from run 0): Ruff (lint, clean code, security, C901), SQLFluff, sqlglot, Opengrep, gitleaks, pip-audit, Checkov | done 2 Nov for Ruff, SQLFluff, gitleaks (+3 rules), osv-scanner. Opengrep with our rules moves to Tier 5; Checkov waits for a repo with Terraform; sqlglot rules come with the cost adapter (Tier 4) |
+| SL-032 | Adapters: pytest + coverage.py + diff-cover, complexipy, import-linter, vulture | partly 2 Nov: complexipy, vulture done. pytest + coverage + diff-cover and import-linter move to Tier 5 with the test kit |
+| SL-033 | Findings normalised to SARIF with our check ids; REVIEW.md in fix-first order | done 2 Nov: SARIF 2.1.0, JSON, REVIEW.md |
+| SL-034 | Gate + baseline: block list, warn the rest, only new findings fail | done 2 Nov: gates from the catalog, suppression with reason, baseline by fingerprint |
+| SL-035 | `.pre-commit-hooks.yaml` and the commit / PR / nightly / pre-deploy split | done 2 Nov: .pre-commit-hooks.yaml; proven with pre-commit try-repo |
+| SL-036 | Run 1 on the sample; record the score | done 2 Nov: 34/101 strict, 39/101 by family, 0/16 traps (tests/RESULTS.md) |
 
 ## Tier 4: cost adapter
 
@@ -93,6 +93,7 @@ except Tier 7 (teaching), which runs alongside.
 | SL-054 | Joined view: complex-and-untested, pure-but-untested | — |
 | SL-055 | Run 2 on the sample with the delta; record the score | — |
 | SL-056 | Draft tests for untested pure functions: snapshot tests (syrupy) from small dev samples, Hypothesis ghostwriter skeletons with schema-to-strategy helper, Claude-drafted case tables; keep a drafted test only if mutation testing shows it catches bugs. Pynguin on trial | — |
+| SL-058 | Dead code with entry points: read job entry points and notebook calls from databricks.yml so vulture stops flagging library functions | — |
 | SL-057 | Test kit from examples/scd2 into the package: idempotency, uniqueness, nothing dropped, fan-out, cartesian; case tables for SCD2, dedupe, incremental, late data | — |
 
 ## Tier 6: real repo
