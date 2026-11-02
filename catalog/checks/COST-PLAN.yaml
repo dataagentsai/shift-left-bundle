@@ -1,0 +1,92 @@
+# SL-COST-PLAN: cost in the query plan, read from EXPLAIN with every input table empty but with its real schema.
+# No data is read. Sizes are unknown, so checks that need sizes (broadcast choice, skew) are out of scope here.
+- id: SL-COST-PLAN-01
+  status: draft
+  since: 0.1.0
+  title: Cartesian product in the plan
+  level: MUST
+  statement: The physical plan of a job MUST NOT contain a cartesian product unless the job marks it as intended.
+  why: A join condition referred to the wrong column, so the optimiser dropped it; the query text looked fine but the plan was a cartesian product.
+  fix: Correct the join condition; the plan check confirms the fix.
+  stage: pr
+  gate: block
+  found_by: plan
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-14]
+- id: SL-COST-PLAN-02
+  status: draft
+  since: 0.1.0
+  title: Nested-loop join
+  level: SHOULD
+  statement: The plan SHOULD NOT use a nested-loop join between two inputs that can be large; the join SHOULD have an equality condition.
+  why: A join on "date between start and end" became a nested loop that compared every row with every row.
+  fix: Add an equality key (for example a bucketed date), or turn the range into keys first.
+  stage: pr
+  gate: warn
+  found_by: plan
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-19]
+- id: SL-COST-PLAN-03
+  status: draft
+  since: 0.1.0
+  title: Row-by-row custom function evaluation in the plan
+  level: SHOULD
+  statement: The plan SHOULD NOT evaluate row-by-row custom functions on large inputs when a built-in or batch alternative exists.
+  why: The plan showed every row being shipped to a separate interpreter for a string clean-up a built-in could do.
+  fix: Replace with built-ins or a batch custom function.
+  stage: pr
+  gate: warn
+  found_by: plan
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-04]
+- id: SL-COST-PLAN-04
+  status: draft
+  since: 0.1.0
+  title: Filter not pushed down to the scan
+  level: SHOULD
+  statement: When a query filters a source, the plan SHOULD show the filter pushed to the scan, so files and row groups can be skipped.
+  why: A filter written after a custom function call could not be pushed down; the job read all files and then threw most rows away.
+  fix: Filter on raw columns before custom functions and casts.
+  stage: pr
+  gate: warn
+  found_by: plan
+  cost_impact: high
+  dac: [PERF-05]
+  cites: []
+  related: [SL-COST-CODE-15]
+- id: SL-COST-PLAN-05
+  status: draft
+  since: 0.1.0
+  title: Too many shuffles in one job
+  level: SHOULD
+  statement: A job's plan SHOULD NOT contain more than five data exchanges between workers without a reason recorded in the code.
+  why: Repeated regrouping by different keys moved the full dataset across the network six times.
+  fix: Group once by the shared key, or reorder steps so exchanges can be reused.
+  stage: pr
+  gate: warn
+  found_by: plan
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: []
+- id: SL-COST-PLAN-06
+  status: draft
+  since: 0.1.0
+  title: Same source scanned more than once in one plan
+  level: SHOULD
+  statement: A plan SHOULD scan each source once; a repeated scan of the same source SHOULD be replaced by reuse.
+  why: A self-comparison read the same large table twice in one query.
+  fix: Read once and reuse, or use a window function instead of a self join.
+  stage: pr
+  gate: warn
+  found_by: plan
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-08]

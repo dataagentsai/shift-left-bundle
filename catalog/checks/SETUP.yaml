@@ -1,0 +1,142 @@
+# SL-SETUP: what the repository should have. Found by looking at the repository, not the code. All report only.
+- id: SL-SETUP-01
+  status: draft
+  since: 0.1.0
+  title: No commit-time checks configured
+  level: SHOULD
+  statement: The repository SHOULD configure the fast checks to run on every commit on the developer's machine.
+  why: Every problem was first seen in CI twenty minutes after the push, so fixes came in streams of small commits.
+  fix: Add the commit-time configuration from the bundle's templates.
+  stage: nightly
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-SETUP-02
+  status: draft
+  since: 0.1.0
+  title: Tests not run on every change
+  level: MUST
+  statement: The CI pipeline MUST run the unit tests on every pull request.
+  why: Tests existed but only ran when someone remembered; three of them had been failing for a month.
+  fix: Add a test step to the pull-request pipeline and make it a required check.
+  stage: nightly
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [TEST-03]
+  cites:
+  - standard: OPENSSF-SCORECARD
+    ref: CI-Tests
+  related: [SL-SETUP-03]
+- id: SL-SETUP-03
+  status: draft
+  since: 0.1.0
+  title: No coverage threshold in CI
+  level: SHOULD
+  statement: The CI pipeline SHOULD fail a change whose changed lines fall below the coverage threshold.
+  why: Coverage was measured and shown but never enforced; it fell from 70% to 30% in a year.
+  fix: Add the changed-lines coverage gate.
+  stage: nightly
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-TEST-01]
+- id: SL-SETUP-04
+  status: draft
+  since: 0.1.0
+  title: No secret scanning
+  level: MUST
+  statement: The repository MUST scan every change, and its history, for secrets.
+  why: A token sat in the repository for eight months because nothing looked for it.
+  fix: Add secret scanning to commit-time checks and CI.
+  stage: nightly
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [REL-05]
+  cites: []
+  related: [SL-SECRET-01]
+- id: SL-SETUP-05
+  status: draft
+  since: 0.1.0
+  title: Main branch not protected
+  level: MUST
+  statement: The main branch MUST require a pull request with a review and passing required checks before merge.
+  why: A direct push to main skipped review and the checks, and broke the nightly load.
+  fix: Turn on branch protection with required reviews and checks.
+  stage: nightly
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [REL-02]
+  cites:
+  - standard: OPENSSF-SCORECARD
+    ref: Branch-Protection
+  related: []
+- id: SL-SETUP-06
+  status: draft
+  since: 0.1.0
+  title: Deployment configuration not validated before deploy
+  level: MUST
+  statement: The deployment configuration MUST be validated, and the configuration cost checks run, before every deploy.
+  why: A typo in a job definition was found only when the deploy failed halfway, leaving half the jobs on the old version.
+  fix: Add a validation step before deploy in the release pipeline.
+  stage: nightly
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [REL-06, CFG-01]
+  cites: []
+  related: []
+- id: SL-SETUP-07
+  status: draft
+  since: 0.1.0
+  title: Query files not linted
+  level: SHOULD
+  statement: The repository SHOULD lint every query file and query cell, not only the general-purpose code.
+  why: All the code was linted, but the 40 query files where most of the cost lived were not.
+  fix: Add the query linter to commit-time checks.
+  stage: nightly
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: [SL-STYLE-03]
+- id: SL-SETUP-08
+  status: draft
+  since: 0.1.0
+  title: No test setup
+  level: SHOULD
+  statement: The repository SHOULD have a test folder, a shared local engine session for tests, and its test libraries declared.
+  why: The first person to write a test spent a day getting a local session working, so nobody wrote the second test.
+  fix: Add the test setup from the bundle's templates.
+  stage: nightly
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-TEST-04]
+- id: SL-SETUP-09
+  status: draft
+  since: 0.1.0
+  title: Security practices below the agreed score
+  level: SHOULD
+  statement: The repository SHOULD meet the agreed score on a published checklist of security practices.
+  why: A review found unpinned build actions, no dependency updates and no static analysis, each easy to fix and never noticed.
+  fix: Fix the lowest-scoring practices first.
+  stage: nightly
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [REL-01, REL-02]
+  cites:
+  - standard: OPENSSF-SCORECARD
+    ref: aggregate score
+  related: []

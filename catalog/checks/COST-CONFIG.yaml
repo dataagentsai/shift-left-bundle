@@ -1,0 +1,121 @@
+# SL-COST-CONFIG: cost in job and compute configuration, checked before deploy.
+- id: SL-COST-CONFIG-01
+  status: draft
+  since: 0.1.0
+  title: Compute with no automatic shutdown
+  level: MUST
+  statement: Every interactive compute definition MUST shut itself down after a set idle time.
+  why: A shared development cluster with no idle shutdown ran over a long weekend and used a month's budget.
+  fix: Set an idle shutdown; 30 to 60 minutes is common for development.
+  stage: predeploy
+  gate: block
+  found_by: static
+  cost_impact: high
+  dac: [COST-04]
+  cites: []
+  related: []
+- id: SL-COST-CONFIG-02
+  status: draft
+  since: 0.1.0
+  title: Scheduled job on shared interactive compute
+  level: MUST
+  statement: A scheduled job MUST run on compute created for the job, not on shared interactive compute that stays on between runs.
+  why: Nightly jobs pointed at an interactive cluster kept it alive all day and paid the higher interactive price.
+  fix: Use job compute, created per run and removed after it.
+  stage: predeploy
+  gate: block
+  found_by: static
+  cost_impact: high
+  dac: [COST-02, COST-04]
+  cites: []
+  related: []
+- id: SL-COST-CONFIG-03
+  status: draft
+  since: 0.1.0
+  title: No cost tags on jobs and compute
+  level: MUST
+  statement: Every job and compute definition MUST carry tags naming the owning team and the job or product.
+  why: The bill doubled in one month and nobody could say which project caused it.
+  fix: Add the tags the platform's cost policy requires.
+  stage: predeploy
+  gate: block
+  found_by: static
+  cost_impact: medium
+  dac: [COST-03]
+  cites: []
+  related: []
+- id: SL-COST-CONFIG-04
+  status: draft
+  since: 0.1.0
+  title: No upper limit on workers
+  level: MUST
+  statement: Autoscaling compute MUST declare a maximum number of workers within the limit the platform policy allows.
+  why: A skewed join triggered autoscaling to the account maximum; one run cost more than the month's plan.
+  fix: Set a maximum that fits the job's size and the policy.
+  stage: predeploy
+  gate: block
+  found_by: static
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: []
+- id: SL-COST-CONFIG-05
+  status: draft
+  since: 0.1.0
+  title: Always-running pipeline for a batch need
+  level: SHOULD
+  statement: A pipeline whose consumers need data hourly or less often SHOULD run on a schedule, not continuously.
+  why: A pipeline set to continuous mode for a daily report kept compute running all day.
+  fix: Switch to triggered or scheduled runs that match the freshness target.
+  stage: predeploy
+  gate: warn
+  found_by: static
+  cost_impact: high
+  dac: [COST-04, PERF-02]
+  cites: []
+  related: [SL-COST-CONFIG-06]
+- id: SL-COST-CONFIG-06
+  status: draft
+  since: 0.1.0
+  title: Schedule much more frequent than the freshness target
+  level: SHOULD
+  statement: A job's schedule SHOULD NOT run more often than its declared freshness target needs.
+  why: A job feeding a daily dashboard ran every five minutes, so compute never got to switch off.
+  fix: Align the schedule with the freshness target in the data contract.
+  stage: predeploy
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-04, PERF-02]
+  cites: []
+  related: [SL-COST-CONFIG-05]
+- id: SL-COST-CONFIG-07
+  status: draft
+  since: 0.1.0
+  title: Oversized compute in development
+  level: SHOULD
+  statement: Development and test environments SHOULD use smaller compute than production, within a size the policy sets.
+  why: The development target copied production's 40-worker cluster, so every test run cost as much as a production run.
+  fix: Override the compute size per environment.
+  stage: predeploy
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02, ENV-01]
+  cites: []
+  related: []
+- id: SL-COST-CONFIG-08
+  status: draft
+  since: 0.1.0
+  title: Job with no timeout
+  level: SHOULD
+  statement: Every job SHOULD declare a timeout, so a stuck run stops instead of running until someone notices.
+  why: A run hung on a locked source for 19 hours with all its workers held.
+  fix: Set a timeout a little above the job's normal worst run time.
+  stage: predeploy
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: []

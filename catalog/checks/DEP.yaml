@@ -1,0 +1,86 @@
+# SL-DEP: dependencies.
+- id: SL-DEP-01
+  status: draft
+  since: 0.1.0
+  title: Library with a known vulnerability
+  level: MUST
+  statement: The project MUST NOT depend on a library version with a known high or critical vulnerability that has a fixed version available.
+  why: An old HTTP library with a published flaw was pinned for two years because nobody checked.
+  fix: Upgrade to the fixed version; if none exists, record the risk and a review date in the baseline.
+  stage: pr
+  gate: block
+  found_by: static
+  cost_impact: null
+  dac: [REL-01]
+  cites:
+  - standard: CWE
+    ref: CWE-1395
+  - standard: OWASP-TOP10
+    ref: "A06:2021 Vulnerable and Outdated Components"
+  related: [SL-DEP-02]
+- id: SL-DEP-02
+  status: draft
+  since: 0.1.0
+  title: Library versions not pinned
+  level: MUST
+  statement: Every library the project needs MUST be pinned to an exact version through a lockfile, so every run installs the same versions.
+  why: An unpinned library released a breaking change overnight and every job that installed fresh failed the next morning.
+  fix: Generate and commit a lockfile; update it on purpose.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-01, REL-03]
+  cites:
+  - standard: OPENSSF-SCORECARD
+    ref: Pinned-Dependencies
+  related: [SL-DEP-01]
+- id: SL-DEP-03
+  status: draft
+  since: 0.1.0
+  title: Library with a licence the project can't use
+  level: SHOULD
+  statement: The project SHOULD only depend on libraries whose licences are on the organisation's allowed list, and SHOULD flag unknown licences.
+  why: A library with a licence that barred commercial use was found only during a client's legal review.
+  fix: Replace the library, or get the licence approved and record it.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: []
+  cites:
+  - standard: SPDX
+    ref: licence identifiers
+  related: []
+- id: SL-DEP-04
+  status: draft
+  since: 0.1.0
+  title: Unmaintained library
+  level: SHOULD
+  statement: The project SHOULD flag libraries with no release for two years, so a replacement is planned before a flaw appears.
+  why: A parsing library went unmaintained; when a flaw was published there was no fixed version to move to.
+  fix: Plan a replacement, or take ownership of a fork.
+  stage: nightly
+  gate: report
+  found_by: static
+  cost_impact: null
+  dac: [REL-01]
+  cites:
+  - standard: CWE
+    ref: CWE-1104
+  related: []
+- id: SL-DEP-05
+  status: draft
+  since: 0.1.0
+  title: Local test runtime differs from the target runtime
+  level: MUST
+  statement: The language and engine versions used for local tests MUST match the versions of the runtime the job is deployed to.
+  why: Tests passed locally on a newer engine version and the job failed in production on a function the older runtime didn't have.
+  fix: Pin the test environment to the target runtime's versions, read from the deployment configuration.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [ENV-01, TEST-03]
+  cites: []
+  related: [SL-TEST-04]

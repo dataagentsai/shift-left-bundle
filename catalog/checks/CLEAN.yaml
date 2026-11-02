@@ -1,0 +1,121 @@
+# SL-CLEAN: clean code.
+- id: SL-CLEAN-01
+  status: draft
+  since: 0.1.0
+  title: Nesting where an early return works
+  level: SHOULD
+  statement: Functions SHOULD return early for simple cases instead of nesting the main path, and SHOULD NOT use an else after a return.
+  why: A nested version of a discount rule scored 9 for cognitive complexity; the early-return version of the same rule scored 3.
+  fix: Handle the simple cases first and return; keep the main path flat.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: [SL-CPLX-02]
+- id: SL-CLEAN-02
+  status: draft
+  since: 0.1.0
+  title: Too many arguments
+  level: SHOULD
+  statement: A function SHOULD NOT take more arguments than the threshold in core/gates.yaml; related values SHOULD travel together as one object.
+  why: A function with nine positional arguments was called with two of them swapped, and no test noticed.
+  fix: Group related arguments into a small settings object, or split the function.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-03
+  status: draft
+  since: 0.1.0
+  title: Mutable default argument
+  level: MUST
+  statement: A function MUST NOT use a mutable value, such as a list or dictionary, as a default argument.
+  why: A default list of columns kept growing across calls in the same process, so later batches got extra columns.
+  fix: Default to nothing and create the value inside the function.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-04
+  status: draft
+  since: 0.1.0
+  title: Errors caught and hidden
+  level: MUST
+  statement: Code MUST NOT catch every error and carry on silently; it MUST catch specific errors and either handle them or re-raise.
+  why: A broad error catch around a write logged "skipped" and continued; a month of rows was missing before anyone saw it.
+  fix: Catch the specific error you expect; let everything else fail the job.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [GATE-01]
+  cites: []
+  related: []
+- id: SL-CLEAN-05
+  status: draft
+  since: 0.1.0
+  title: Commented-out code
+  level: SHOULD
+  statement: The repository SHOULD NOT keep blocks of commented-out code.
+  why: A commented-out filter was uncommented "temporarily" during an incident and stayed in production.
+  fix: Delete it; history keeps it.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: [SL-CPLX-04]
+- id: SL-CLEAN-06
+  status: draft
+  since: 0.1.0
+  title: Unused arguments and imports
+  level: SHOULD
+  statement: Functions SHOULD NOT take arguments they don't use, and modules SHOULD NOT import what they don't use.
+  why: A function kept an unused date argument; callers believed it filtered by date and it didn't.
+  fix: Remove them.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-07
+  status: draft
+  since: 0.1.0
+  title: Business thresholds hard-coded in logic
+  level: SHOULD
+  statement: Business values that may change, such as thresholds, rates and lists of codes, SHOULD come from configuration or a named constant, not appear as bare numbers in logic.
+  why: A fraud threshold of 100 appeared in four places; it was changed in two.
+  fix: Move it to configuration or one named constant.
+  stage: commit
+  gate: report
+  found_by: static
+  cost_impact: null
+  dac: [REL-04]
+  cites: []
+  related: []
+- id: SL-CLEAN-08
+  status: draft
+  since: 0.1.0
+  title: Logic kept in notebooks
+  level: SHOULD
+  statement: Notebooks SHOULD be thin callers of functions kept in modules, so the logic can be imported, tested and measured.
+  why: All transforms lived in notebook cells, so there was nothing a unit test could import and coverage read zero.
+  fix: Move functions into modules; the notebook reads, calls and writes.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-PURE-02, SL-TEST-03]

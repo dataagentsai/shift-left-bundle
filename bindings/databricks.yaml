@@ -1,0 +1,159 @@
+# Databricks binding v0 (SL-015). The only place product and tool names appear.
+# Platform: Databricks on PySpark 3.5, Python 3.11, Databricks SQL, Asset Bundles (databricks.yml).
+#
+# Every check in catalog/ has an entry. Fields:
+#   tool:   the adapter that finds it (see `tools` below)
+#   rules:  the tool's own rule ids
+#   status: adopt   = an off-the-shelf rule exists; we only configure it
+#           cost    = an existing rule in the cost adapter (costlens-core, optional until published, D2)
+#           build   = we write the rule or plugin (an Opengrep rule, a sqlglot rule, a repo-review plugin)
+#           trial   = a candidate tool, to be scored on the sample repo before adopting
+#   note:   anything a reader needs
+
+tools:
+  ruff: {licence: MIT, kind: python lint, format and security}
+  complexipy: {licence: MIT, kind: cognitive complexity}
+  vulture: {licence: MIT, kind: dead code}
+  pylint: {licence: GPL-2.0 (tool only, not linked), kind: duplicate code}
+  opengrep: {licence: LGPL-2.1, kind: pattern rules (our own rules only)}
+  sqlfluff: {licence: MIT, kind: SQL lint and format, dialect databricks}
+  sqlglot: {licence: MIT, kind: SQL syntax tree for our own rules}
+  gitleaks: {licence: MIT, kind: secrets in files and history}
+  pip-audit: {licence: Apache-2.0, kind: known vulnerabilities}
+  pip-licenses: {licence: MIT, kind: licence list}
+  coverage: {licence: Apache-2.0, kind: coverage.py with pytest-cov and diff-cover}
+  mutmut: {licence: BSD-3-Clause, kind: mutation testing}
+  import-linter: {licence: BSD-2-Clause, kind: architecture rules}
+  repo-review: {licence: BSD-3-Clause, kind: repository checks, with sp-repo-review and our plugins}
+  scorecard: {licence: Apache-2.0, kind: OpenSSF Scorecard}
+  bundle-validate: {licence: Databricks CLI, kind: databricks bundle validate}
+  costlens: {licence: Apache-2.0 oss-core, kind: cost rules for SQL, Python, plans and bundles; optional adapter}
+  plan-harness: {licence: ours, kind: empty-table EXPLAIN on local PySpark}
+  purity: {licence: ours, kind: purity classifier and test-time guard}
+  shiftleft-tests: {licence: ours, kind: rules over test files and coverage data}
+
+checks:
+  # ---- cost in code and query text
+  SL-COST-CODE-01: {tool: costlens, rules: [to_pandas_without_limit], status: cost, note: "collect() without limit is a build gap in costlens; add an Opengrep rule"}
+  SL-COST-CODE-02: {tool: costlens, rules: [loop_calling_spark_sql, loop_calling_spark_read, code_spark_action_inside_loop], status: cost}
+  SL-COST-CODE-03: {tool: costlens, rules: [collect_in_for_loop], status: cost}
+  SL-COST-CODE-04: {tool: opengrep, rules: [sl-python-udf-for-builtin], status: build, note: "costlens udf_proliferation counts UDFs per file; this needs a per-UDF rule. Trial: pyspark-antipattern, SparkDoctor"}
+  SL-COST-CODE-05: {tool: opengrep, rules: [sl-withcolumn-in-loop], status: trial, note: "cylint and pyspark-antipattern have this; adopt one if it scores well"}
+  SL-COST-CODE-06: {tool: opengrep, rules: [sl-count-for-emptiness], status: build, note: "df.count() == 0 / > 0; prefer df.isEmpty() (PySpark 3.3+)"}
+  SL-COST-CODE-07: {tool: costlens, rules: [code_persist_without_unpersist], status: cost}
+  SL-COST-CODE-08: {tool: costlens, rules: [multi_read_same_table], status: cost}
+  SL-COST-CODE-09: {tool: costlens, rules: [code_hardcoded_repartition_debug_value], status: cost, note: "covers repartition(1)/coalesce(1)"}
+  SL-COST-CODE-10: {tool: costlens, rules: [broadcast_in_loop], status: cost}
+  SL-COST-CODE-11: {tool: costlens, rules: [code_spark_action_result_discarded], status: cost, note: "show(), display(), count() whose result is unused"}
+  SL-COST-CODE-12: {tool: opengrep, rules: [sl-infer-schema], status: build, note: "inferSchema=true, or read without .schema(); costlens auto_loader_inferred_schema_no_location covers Auto Loader"}
+  SL-COST-CODE-13: {tool: costlens, rules: [select_star, select_distinct_star], status: cost}
+  SL-COST-CODE-14: {tool: costlens, rules: [cross_join], status: cost, note: "sqlfluff AM05 (implicit or explicit join type) helps too"}
+  SL-COST-CODE-15: {tool: costlens, rules: [function_on_partition_column, implicit_type_cast_on_filter, non_sargable_predicate], status: cost}
+  SL-COST-CODE-16: {tool: costlens, rules: [merge_without_partition_predicate], status: cost}
+  SL-COST-CODE-17: {tool: costlens, rules: [ordering_without_limit], status: cost}
+  SL-COST-CODE-18: {tool: costlens, rules: [union_instead_of_union_all], status: cost}
+  SL-COST-CODE-19: {tool: costlens, rules: [not_in_with_subquery], status: cost}
+  SL-COST-CODE-20: {tool: costlens, rules: [delete_without_where, update_without_where], status: cost}
+  SL-COST-CODE-21: {tool: costlens, rules: [nondeterministic_function_in_filter], status: cost}
+  # ---- cost in the plan (EXPLAIN on empty DataFrames with real schemas)
+  SL-COST-PLAN-01: {tool: plan-harness, rules: [CartesianProduct], status: build, note: "checked on Spark 3.5.1, 2 Nov 2026: a keyless join on empty inputs plans as CartesianProduct"}
+  SL-COST-PLAN-02: {tool: plan-harness, rules: [BroadcastNestedLoopJoin], status: build}
+  SL-COST-PLAN-03: {tool: plan-harness, rules: [BatchEvalPython, ArrowEvalPython], status: build}
+  SL-COST-PLAN-04: {tool: costlens, rules: [predicate_pushdown_gap], status: cost, note: "reads PushedFilters / PartitionFilters on the Scan node"}
+  SL-COST-PLAN-05: {tool: costlens, rules: [wide_stage_count], status: cost}
+  SL-COST-PLAN-06: {tool: plan-harness, rules: [repeated-scan], status: build, note: "costlens repeated_table_scan works on SQL text; this is the plan-level version"}
+  # ---- cost in job and compute config (databricks.yml, resources/*.yml)
+  SL-COST-CONFIG-01: {tool: costlens, rules: [cluster_no_autotermination], status: cost}
+  SL-COST-CONFIG-02: {tool: costlens, rules: [job_on_existing_cluster], status: cost}
+  SL-COST-CONFIG-03: {tool: repo-review, rules: [sl-dab-cost-tags], status: build, note: "custom_tags on job_clusters and tags on jobs; names come from the team's config"}
+  SL-COST-CONFIG-04: {tool: costlens, rules: [oversized_autoscale_max], status: cost, note: "also flag autoscale with no max_workers"}
+  SL-COST-CONFIG-05: {tool: costlens, rules: [dlt_continuous_for_batch_workload], status: cost}
+  SL-COST-CONFIG-06: {tool: costlens, rules: [cron_too_frequent], status: cost, note: "needs the freshness target from the data contract to compare against"}
+  SL-COST-CONFIG-07: {tool: repo-review, rules: [sl-dab-dev-target-size], status: build, note: "compare targets.dev overrides with targets.prod"}
+  SL-COST-CONFIG-08: {tool: repo-review, rules: [sl-dab-job-timeout], status: build, note: "timeout_seconds on every job and task"}
+  # ---- unsafe code
+  SL-SEC-01: {tool: ruff, rules: [S608], status: adopt, note: "plus an Opengrep rule for spark.sql(f'...'); fix is spark.sql(query, args={...}) (PySpark 3.4+)"}
+  SL-SEC-02: {tool: ruff, rules: [S307, S102], status: adopt}
+  SL-SEC-03: {tool: ruff, rules: [S301, S506], status: adopt, note: "pickle, unsafe yaml.load"}
+  SL-SEC-04: {tool: ruff, rules: [S501, S323], status: adopt}
+  SL-SEC-05: {tool: ruff, rules: [S602, S605], status: adopt}
+  SL-SEC-06: {tool: opengrep, rules: [sl-secret-printed], status: build, note: "print/log of dbutils.secrets.get(...)"}
+  SL-SEC-07: {tool: opengrep, rules: [sl-pii-sample-logged], status: build, note: "show()/display() on tables whose columns are tagged personal in the contract; report only, noisy by nature"}
+  SL-SEC-08: {tool: sqlglot, rules: [sl-grant-all-or-everyone], status: build, note: "GRANT ALL PRIVILEGES, or GRANT to `account users` / `users`"}
+  # ---- secrets
+  SL-SECRET-01: {tool: gitleaks, rules: [gitleaks default rules, sl-databricks-pat], status: adopt, note: "add a rule for Databricks tokens (dapi...) if the default set lacks one"}
+  SL-SECRET-02: {tool: gitleaks, rules: [git history scan], status: adopt}
+  SL-SECRET-03: {tool: opengrep, rules: [sl-credential-in-config], status: build, note: "password/token keys with literal values in *.yml, *.json, *.conf; allow {{secrets/scope/key}} references"}
+  # ---- dependencies
+  SL-DEP-01: {tool: pip-audit, rules: [vulnerability database], status: adopt}
+  SL-DEP-02: {tool: repo-review, rules: [sl-lockfile-present], status: build, note: "uv.lock, poetry.lock or fully pinned requirements"}
+  SL-DEP-03: {tool: pip-licenses, rules: [allow-list], status: trial}
+  SL-DEP-04: {tool: repo-review, rules: [sl-unmaintained-dependency], status: build, note: "last release date from the PyPI JSON API"}
+  SL-DEP-05: {tool: repo-review, rules: [sl-runtime-match], status: build, note: "compare test pins (pyspark, python) with spark_version in databricks.yml, using the Databricks Runtime release notes table"}
+  # ---- purity
+  SL-PURE-01: {tool: purity, rules: [classify], status: build}
+  SL-PURE-02: {tool: purity, rules: [could-be-pure], status: build}
+  SL-PURE-03: {tool: purity, rules: [non-repeatable-in-logic], status: build}
+  SL-PURE-04: {tool: import-linter, rules: [layers contract], status: adopt, note: "the team declares logic vs io modules in .importlinter"}
+  SL-PURE-05: {tool: purity, rules: [false-pure-mark], status: build, note: "deal's @deal.pure marker is accepted as the mark"}
+  SL-PURE-06: {tool: purity, rules: [action-in-logic], status: build}
+  SL-PURE-07: {tool: purity, rules: [global-session], status: build, note: "databricks-labs-pylint C8915 spark-outside-function is similar; not adopted (pylint, last release 2024)"}
+  # ---- tests
+  SL-TEST-01: {tool: coverage, rules: [diff-cover --fail-under=80], status: adopt}
+  SL-TEST-02: {tool: shiftleft-tests, rules: [pure-untested], status: build, note: "join of the purity report with coverage contexts"}
+  SL-TEST-03: {tool: repo-review, rules: [sl-test-file-per-module], status: build}
+  SL-TEST-04: {tool: shiftleft-tests, rules: [offline-tests], status: build, note: "run unit tests with network blocked (pytest-socket) and a local[1] session"}
+  SL-TEST-05: {tool: mutmut, rules: [mutation score], status: adopt, note: "limited to pure functions via the purity report"}
+  SL-TEST-06: {tool: opengrep, rules: [sl-test-count-only], status: build, note: "test functions whose only assertion is on count()"}
+  # ---- complexity
+  SL-CPLX-01: {tool: ruff, rules: [C901], status: adopt}
+  SL-CPLX-02: {tool: complexipy, rules: [cognitive complexity], status: adopt}
+  SL-CPLX-03: {tool: ruff, rules: [PLR0915], status: adopt}
+  SL-CPLX-04: {tool: vulture, rules: [unused code], status: adopt}
+  SL-CPLX-05: {tool: pylint, rules: [R0801], status: trial, note: "or jscpd; pick on the sample"}
+  # ---- clean code
+  SL-CLEAN-01: {tool: ruff, rules: [RET505, RET506, RET507, RET508, SIM102, PLR1702], status: adopt, note: "checked 2 Nov 2026: RET505 fires on the nested discount example"}
+  SL-CLEAN-02: {tool: ruff, rules: [PLR0913], status: adopt}
+  SL-CLEAN-03: {tool: ruff, rules: [B006], status: adopt}
+  SL-CLEAN-04: {tool: ruff, rules: [E722, BLE001, S110, S112], status: adopt}
+  SL-CLEAN-05: {tool: ruff, rules: [ERA001], status: adopt}
+  SL-CLEAN-06: {tool: ruff, rules: [ARG001, ARG002, F401], status: adopt}
+  SL-CLEAN-07: {tool: ruff, rules: [PLR2004], status: adopt, note: "noisy; report only"}
+  SL-CLEAN-08: {tool: repo-review, rules: [sl-thin-notebooks], status: build, note: "share of function definitions in notebooks vs modules"}
+  # ---- style
+  SL-STYLE-01: {tool: ruff, rules: [ruff format], status: adopt}
+  SL-STYLE-02: {tool: ruff, rules: [F, E], status: adopt}
+  SL-STYLE-03: {tool: sqlfluff, rules: [core rules, dialect databricks], status: adopt, note: "%sql cells and spark.sql strings extracted first (costlens inputs/notebook.py, inputs/python_source.py)"}
+  SL-STYLE-04: {tool: ruff, rules: [N], status: adopt}
+  # ---- setup
+  SL-SETUP-01: {tool: repo-review, rules: [PC100], status: adopt, note: "sp-repo-review: has .pre-commit-config.yaml"}
+  SL-SETUP-02: {tool: scorecard, rules: [CI-Tests], status: adopt, note: "plus a repo-review plugin reading the workflow files"}
+  SL-SETUP-03: {tool: repo-review, rules: [sl-coverage-gate], status: build}
+  SL-SETUP-04: {tool: repo-review, rules: [sl-secret-scanning], status: build}
+  SL-SETUP-05: {tool: scorecard, rules: [Branch-Protection], status: adopt}
+  SL-SETUP-06: {tool: repo-review, rules: [sl-bundle-validate-in-ci], status: build}
+  SL-SETUP-07: {tool: repo-review, rules: [sl-sql-lint-configured], status: build}
+  SL-SETUP-08: {tool: repo-review, rules: [sl-test-setup], status: build}
+  SL-SETUP-09: {tool: scorecard, rules: [aggregate score], status: adopt}
+
+# Concrete calls per purity category (core/purity.yaml). Patterns are attribute or function names as seen in the syntax tree.
+purity:
+  table_read: [spark.read, spark.readStream, spark.table, spark.sql, DeltaTable.forName, DeltaTable.forPath, dlt.read, dlt.read_stream]
+  table_write: [.write, .writeStream, .saveAsTable, .insertInto, .save, .merge, .execute, .delete, .update, .vacuum, .optimize]
+  catalog_change: [spark.catalog.createTable, spark.catalog.dropTempView, "spark.sql(CREATE|DROP|ALTER|GRANT|REVOKE ...)"]
+  platform_utility: [dbutils, mssparkutils, notebookutils]
+  network: [requests, urllib, httpx, socket, boto3, azure, google.cloud, databricks.sdk]
+  local_files: [open, os.remove, os.rename, shutil, pathlib.Path.write_text, pathlib.Path.unlink]
+  clock: [datetime.now, datetime.utcnow, date.today, time.time, F.current_timestamp, F.current_date, F.now, F.localtimestamp]
+  randomness: [random, uuid, secrets, numpy.random, F.rand, F.randn, F.uuid, F.shuffle, .sample, .randomSplit]
+  environment: [os.environ, os.getenv, sys.argv, spark.conf.get]
+  output: [print, logging, logger, .show, display, displayHTML]
+  engine_action: [.count, .collect, .take, .head, .first, .toPandas, .toLocalIterator, .foreach, .foreachPartition, .isEmpty]
+  engine_state: [.cache, .persist, .unpersist, .createOrReplaceTempView, .createGlobalTempView, spark.conf.set, .checkpoint, .localCheckpoint]
+  global_state: [global, nonlocal, "assignment to an argument's attribute or item"]
+  global_session: ["spark (module-level name, not a parameter)", SparkSession.getActiveSession, SparkSession.builder.getOrCreate]
+  known_pure:
+    lazy_transform: [.select, .selectExpr, .filter, .where, .withColumn, .withColumns, .withColumnRenamed, .drop, .join, .groupBy, .agg, .union, .unionByName, .dropDuplicates, .distinct, .orderBy, .sort, .limit, .alias, .transform, .fillna, .na, .replace, .withWatermark]
+    column_expression: ["pyspark.sql.functions.* except the clock and randomness entries", F.col, F.lit, F.when, F.expr, Window]
+    standard_pure: [math, re, decimal, fractions, itertools, functools, operator, string, textwrap, json.loads, json.dumps]
+  test_guard_patch: [pyspark.sql.DataFrameReader, pyspark.sql.DataFrameWriter, pyspark.sql.SparkSession.table, pyspark.sql.SparkSession.sql, delta.tables.DeltaTable, dbutils]

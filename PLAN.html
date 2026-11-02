@@ -34,7 +34,7 @@ svg text{font-family:"Patrick Hand",cursive}
 <main>
 <h1>Shift-Left Bundle</h1>
 <p class="lede">A light bundle that makes PySpark, Python and Databricks SQL code fail fast, before it runs. It reports cost, security, vulnerability, test and complexity problems, plus what a repo is missing. It is spec-driven like the Data Engineering and Agent Harness families: the checks name no product, and Databricks, then Azure, are bindings.</p>
-<p>Working name, started 2 Nov 2026. Status: <b>plan and reuse check done; decisions D1–D8 agreed as recommended on 2 Nov 2026</b>. Next: spec v0.1.</p>
+<p>Working name, started 2 Nov 2026. Status: <b>plan and reuse check done; decisions D1–D8 agreed as recommended on 2 Nov 2026</b>. Spec v0.1 done 2 Nov 2026: 90 checks in 12 families (catalog/INDEX.md). Next: Tier 2, the sample repo.</p>
 <nav><a href="#lesson">1 Lesson</a><a href="#world">2 How software solved it</a><a href="#trees">3 Syntax trees</a><a href="#checks">4 Check families</a><a href="#reuse">5 Reuse</a><a href="#reports">6 Reports</a><a href="#arch">7 Design</a><a href="#plan">8 Plan</a><a href="#decide">9 Decisions</a></nav>
 
 <h2 id="lesson">1. Lesson: what "shift left" means</h2>
@@ -260,7 +260,7 @@ skills/         a Claude skill that reads REVIEW.md and proposes fixes (LLM only
 <div class="wrap"><table>
 <tr><th>Tier</th><th>What</th><th>Status</th></tr>
 <tr><td>0</td><td>Ground: reuse check, decisions, plan, public repo, site guide</td><td>done 2 Nov</td></tr>
-<tr><td>1</td><td>Spec v0.1: check format, ~60 checks in 12 families, purity lists, gate policy, Databricks binding, linter + table-driven tests</td><td>next</td></tr>
+<tr><td>1</td><td>Spec v0.1: check format, 90 checks in 12 families, purity lists, gate policy, Databricks binding, linter + table-driven tests</td><td>done 2 Nov</td></tr>
 <tr><td>2</td><td>Proof material: sample repo, planted problems, false-positive traps, hidden answer key, scoring</td><td>next</td></tr>
 <tr><td>3</td><td>Off-the-shelf tools through one runner (Ruff, SQLFluff, sqlglot, Opengrep, gitleaks, pip-audit, coverage, complexipy…), SARIF, gate + baseline, run 1</td><td>later</td></tr>
 <tr><td>4</td><td>Cost adapter: existing CostLens cost rules behind the cost port; trial young PySpark linters; add CartesianProduct and Python UDF plan rules</td><td>later</td></tr>

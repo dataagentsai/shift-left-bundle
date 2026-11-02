@@ -1,0 +1,107 @@
+# SL-PURE: purity. Which calls make a function impure is defined in core/purity.yaml (categories)
+# and bindings/<platform>.yaml (the concrete calls per category).
+- id: SL-PURE-01
+  status: draft
+  since: 0.1.0
+  title: Every function classified as pure, impure or unknown
+  level: MUST
+  statement: The report MUST classify every function as pure, impure (with the reason and line) or unknown, and give the counts per module.
+  why: Teams asked "how much of our logic is testable?" and nobody could answer without reading every file.
+  fix: Not a defect; this is the purity report. Use it to choose what to refactor and test first.
+  stage: pr
+  gate: report
+  found_by: static
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-PURE-02, SL-TEST-02]
+- id: SL-PURE-02
+  status: draft
+  since: 0.1.0
+  title: Logic function does reads or writes that could be passed in
+  level: SHOULD
+  statement: A function that transforms data SHOULD take its inputs as parameters and return its output, leaving table reads and writes to a thin caller.
+  why: A 300-line function read three tables, transformed them and wrote the result; it could only be tested against real tables, so it wasn't tested.
+  fix: Split it into a pure transform (data in, data out) and a small caller that reads and writes.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-PURE-01, SL-COST-CODE-08]
+- id: SL-PURE-03
+  status: draft
+  since: 0.1.0
+  title: Non-repeatable values inside logic
+  level: SHOULD
+  statement: Logic functions SHOULD receive values that change between runs, such as the current time, random values or generated ids, as parameters instead of creating them.
+  why: A load timestamp created inside the transform made every test result different, so the tests only checked row counts.
+  fix: Pass the value in; the caller creates it once per run.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [TEST-03, TEST-05]
+  cites: []
+  related: [SL-COST-CODE-21]
+- id: SL-PURE-04
+  status: draft
+  since: 0.1.0
+  title: Logic module imports input and output code
+  level: SHOULD
+  statement: Modules declared as logic SHOULD NOT import modules declared as input and output or platform utilities.
+  why: A shared helper module imported the platform's utility library, so every test that imported any helper needed a cluster.
+  fix: Move the platform call to the caller, and declare the module layers in the architecture rule file.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: []
+- id: SL-PURE-05
+  status: draft
+  since: 0.1.0
+  title: Function marked pure that isn't
+  level: MUST
+  statement: A function marked as pure MUST NOT be classified as impure by the static check, and MUST NOT touch a table during its unit tests.
+  why: A function was marked pure years ago; a later change added a lookup read, and its tests quietly began hitting a shared table.
+  fix: Remove the side effect, or remove the mark.
+  stage: pr
+  gate: block
+  found_by: static
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-PURE-01]
+- id: SL-PURE-06
+  status: draft
+  since: 0.1.0
+  title: Compute-triggering action inside a logic function
+  level: SHOULD
+  statement: Logic functions SHOULD return a lazy result and leave actions that make the engine run, such as counting or collecting, to the caller.
+  why: A transform counted its output "for logging", which ran the whole upstream plan an extra time on every call.
+  fix: Return the result; let the caller decide when to run it.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-11]
+- id: SL-PURE-07
+  status: draft
+  since: 0.1.0
+  title: Engine session taken from global scope
+  level: SHOULD
+  statement: Functions SHOULD receive the engine session as a parameter, or not need it, instead of using a global session.
+  why: Functions used a global session created at import time, so importing a module in a test started a session with the wrong settings.
+  fix: Pass the session in, or get it from the input data when needed.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: []

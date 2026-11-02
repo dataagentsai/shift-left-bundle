@@ -9,7 +9,7 @@ except Tier 7 (teaching), which runs alongside.
 | Tier | What | Status |
 |---|---|---|
 | 0 | Ground: reuse check, decisions, plan, public repo, site guide | done 2 Nov |
-| 1 | Spec v0.1: the checks, written once, no product names | next |
+| 1 | Spec v0.1: the checks, written once, no product names | done 2 Nov: 90 checks, linter clean, 41 tests |
 | 2 | Proof material: sample repo with planted problems and a hidden answer key | next |
 | 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | later |
 | 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | later |
@@ -32,13 +32,13 @@ except Tier 7 (teaching), which runs alongside.
 
 | Id | Task | Status |
 |---|---|---|
-| SL-010 | Check record format: id, family, title, why, example bad/good, stage (commit / PR / nightly / pre-deploy), gate (block / warn / report), cost impact, `dac:` links, `cites:` | next |
-| SL-011 | Family list and id scheme (COST-CODE, COST-PLAN, COST-CONFIG, SEC, SECRET, DEP, PURE, TEST, CPLX, CLEAN, STYLE, SETUP) | next |
-| SL-012 | About 60 checks across the 12 families, each linked to DAC ids (COST-02/03/04, SEC-02, REL-01/02/05, TEST-03) | next |
-| SL-013 | Purity spec: the impure list (reads, writes, dbutils, clock, random, env, globals, actions), the known-pure list, the unknown rule, the `@pure` marker | next |
-| SL-014 | Gate policy as data: what blocks at start, baseline file format, changed-lines coverage at 80% | next |
-| SL-015 | Databricks binding v0: check id → tool + rule id + config | next |
-| SL-016 | Catalog linter (required fields, no product names outside bindings, ids unique, DAC links resolve) + table-driven tests | next |
+| SL-010 | Check record format: id, family, title, level, statement, why (a failure story), fix, stage (commit / PR / nightly / pre-deploy), gate (block / warn / report), cost impact, `dac:` links, `cites:` | done 2 Nov |
+| SL-011 | Family list and id scheme (COST-CODE, COST-PLAN, COST-CONFIG, SEC, SECRET, DEP, PURE, TEST, CPLX, CLEAN, STYLE, SETUP) | done 2 Nov |
+| SL-012 | 90 checks (planned about 60) across the 12 families, each linked to DAC ids (COST-02/03/04, SEC-02, REL-01/02/05, TEST-03) | done 2 Nov |
+| SL-013 | Purity spec: the impure list (reads, writes, dbutils, clock, random, env, globals, actions), the known-pure list, the unknown rule, the `@pure` marker | done 2 Nov |
+| SL-014 | Gate policy as data: what blocks at start, baseline file format, changed-lines coverage at 80% | done 2 Nov |
+| SL-015 | Databricks binding v0: check id → tool + rule id + config | done 2 Nov |
+| SL-016 | Catalog linter (required fields, no product names outside bindings, ids unique, DAC links resolve) + table-driven tests | done 2 Nov |
 
 ## Tier 2: proof material
 
@@ -114,3 +114,4 @@ except Tier 7 (teaching), which runs alongside.
 
 - CostLens oss-core: publish as a package? Until then the cost adapter is optional (D2).
 - Databricks UCX code linter: still maintained? Last PyPI release Oct 2025. Check in Tier 3.
+- Gate list (D5 said: block only security, secrets and cartesian joins). The spec also starts these at block, because they rarely give false alarms: the four job-config checks (pre-deploy), DELETE/UPDATE with no WHERE, known-vulnerable libraries (high and above), a wrong `@pure` mark, and coverage on changed lines (D7). Lower any of them to warn in `catalog/checks/` if you prefer.

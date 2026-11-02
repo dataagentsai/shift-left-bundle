@@ -1,0 +1,91 @@
+# SL-TEST: tests.
+- id: SL-TEST-01
+  status: draft
+  since: 0.1.0
+  title: Changed lines not covered by tests
+  level: MUST
+  statement: The lines a change adds or edits MUST be covered by tests to at least the threshold in core/gates.yaml, counting both sides of every branch.
+  why: A new branch for "refund" orders was never run by any test and reversed the sign of revenue in production.
+  fix: Add a test case for each new branch.
+  stage: pr
+  gate: block
+  found_by: test
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-TEST-02]
+- id: SL-TEST-02
+  status: draft
+  since: 0.1.0
+  title: Pure function with no unit test
+  level: SHOULD
+  statement: Every pure function SHOULD have at least one unit test, because it is the cheapest code to test.
+  why: The purity report showed 17 pure functions nobody had tested; one of them had a wrong rounding rule for a year.
+  fix: Add a table of cases (input rows, expected rows) for it.
+  stage: pr
+  gate: warn
+  found_by: test
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-PURE-01, SL-TEST-01]
+- id: SL-TEST-03
+  status: draft
+  since: 0.1.0
+  title: Module with no test file
+  level: SHOULD
+  statement: Every module that holds logic SHOULD have a matching test file.
+  why: A whole module of business rules had no tests because nobody had created the first test file.
+  fix: Create the test file with one case; the rest follow more easily.
+  stage: pr
+  gate: report
+  found_by: repo
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: []
+- id: SL-TEST-04
+  status: draft
+  since: 0.1.0
+  title: Unit tests need a cluster or network
+  level: MUST
+  statement: Unit tests MUST run offline on a developer machine, with a local engine and no network, shared cluster or shared tables.
+  why: Unit tests ran against a shared workspace; they were slow, failed whenever it was busy, and were eventually skipped.
+  fix: Use a local session and small in-memory datasets; mock or remove network calls.
+  stage: pr
+  gate: warn
+  found_by: test
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-DEP-05]
+- id: SL-TEST-05
+  status: draft
+  since: 0.1.0
+  title: Tests on pure functions miss deliberate bugs
+  level: SHOULD
+  statement: Tests on pure functions SHOULD catch at least the share of deliberate small code changes set in core/gates.yaml.
+  why: Coverage was 95%, but changing ">" to ">=" in a discount rule broke nothing in the tests.
+  fix: Add cases at the boundaries the surviving changes point to.
+  stage: nightly
+  gate: report
+  found_by: test
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-TEST-06]
+- id: SL-TEST-06
+  status: draft
+  since: 0.1.0
+  title: Tests that only check row counts
+  level: SHOULD
+  statement: Tests of data transforms SHOULD compare the actual rows and schema with the expected ones, not only the number of rows.
+  why: A test checked that 3 rows came out; a bug swapped two columns and the test still passed.
+  fix: Compare whole datasets, including the schema.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-TEST-05]

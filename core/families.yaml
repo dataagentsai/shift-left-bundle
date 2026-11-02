@@ -1,0 +1,50 @@
+# The 12 check families. A check's id is SL-<FAMILY>-NN and it lives in catalog/checks/<FAMILY>.yaml.
+# The SL- prefix keeps ids apart from the Data Assurance Catalog (DAC), where SEC-01 already means something else.
+COST-CODE:
+  name: Cost in code and query text
+  asks: Does the code or a query do something that wastes compute?
+  found_by: static
+COST-PLAN:
+  name: Cost in the query plan
+  asks: Is the plan bad, even when every input table is empty?
+  found_by: plan
+COST-CONFIG:
+  name: Cost in job and compute configuration
+  asks: Do the job and compute settings waste money?
+  found_by: static
+SEC:
+  name: Unsafe code
+  asks: Can the code be tricked, or does it leak sensitive values?
+  found_by: static
+SECRET:
+  name: Secrets
+  asks: Is a secret in the repository or its history?
+  found_by: static
+DEP:
+  name: Dependencies
+  asks: Are the libraries safe, pinned, licensed and matched to the target runtime?
+  found_by: static
+PURE:
+  name: Purity
+  asks: Is the logic written as pure functions that can be unit tested?
+  found_by: static
+TEST:
+  name: Tests
+  asks: Is the logic tested, offline, and would the tests catch a bug?
+  found_by: test
+CPLX:
+  name: Complexity
+  asks: Is a function too tangled to read or test?
+  found_by: static
+CLEAN:
+  name: Clean code
+  asks: Does the code follow the habits that keep it readable and safe to change?
+  found_by: static
+STYLE:
+  name: Style
+  asks: Is the code consistent with the agreed format and conventions?
+  found_by: static
+SETUP:
+  name: Repository setup
+  asks: What should the repository have that it doesn't?
+  found_by: repo

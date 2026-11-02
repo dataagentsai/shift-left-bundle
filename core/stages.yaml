@@ -1,0 +1,17 @@
+# Where a check first runs. A check also runs at every later stage.
+commit:
+  name: On commit, on the developer's machine
+  budget_seconds: 10
+  scope: changed files only
+pr:
+  name: On the pull request
+  budget_seconds: 300
+  scope: the whole change; the merge is blocked until it passes
+nightly:
+  name: Nightly on the main branch
+  budget_seconds: null
+  scope: the whole repository and its history; slow checks live here
+predeploy:
+  name: Before deploy
+  budget_seconds: 60
+  scope: job, compute and deployment configuration

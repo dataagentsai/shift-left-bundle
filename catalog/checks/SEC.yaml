@@ -1,0 +1,143 @@
+# SL-SEC: unsafe code.
+- id: SL-SEC-01
+  status: draft
+  since: 0.1.0
+  title: Query text built from variables
+  level: MUST
+  statement: Code MUST NOT build query text by joining strings with variable values; it MUST pass values as query parameters.
+  why: A table name and a filter value came from a job parameter pasted into the query text; a crafted parameter could read other tables.
+  fix: Use named query parameters; for identifiers, check the value against an allowed list.
+  stage: commit
+  gate: block
+  found_by: static
+  cost_impact: null
+  dac: [SEC-02]
+  cites:
+  - standard: CWE
+    ref: CWE-89
+  - standard: OWASP-TOP10
+    ref: "A03:2021 Injection"
+  related: []
+- id: SL-SEC-02
+  status: draft
+  since: 0.1.0
+  title: Dynamic code execution
+  level: MUST
+  statement: Code MUST NOT execute text as code, such as evaluating an expression read from configuration or input.
+  why: A rule engine evaluated expressions stored in a table; anyone who could write to that table could run code on the cluster.
+  fix: Parse rules into a small, fixed set of operations, or use a safe expression library.
+  stage: commit
+  gate: block
+  found_by: static
+  cost_impact: null
+  dac: [SEC-02]
+  cites:
+  - standard: CWE
+    ref: CWE-95
+  related: []
+- id: SL-SEC-03
+  status: draft
+  since: 0.1.0
+  title: Unsafe deserialisation
+  level: MUST
+  statement: Code MUST NOT load serialised objects in a format that can run code, from any source it does not fully control.
+  why: A model file downloaded from a shared folder was loaded with a format that runs code on load.
+  fix: Use a data-only format, or verify a signature before loading.
+  stage: commit
+  gate: block
+  found_by: static
+  cost_impact: null
+  dac: [SEC-02]
+  cites:
+  - standard: CWE
+    ref: CWE-502
+  - standard: OWASP-TOP10
+    ref: "A08:2021 Software and Data Integrity Failures"
+  related: []
+- id: SL-SEC-04
+  status: draft
+  since: 0.1.0
+  title: Certificate checking turned off
+  level: MUST
+  statement: Network calls MUST verify server certificates; code MUST NOT turn verification off.
+  why: Verification was turned off to get past a proxy error in development and the line shipped to production.
+  fix: Install the right certificate authority bundle instead.
+  stage: commit
+  gate: block
+  found_by: static
+  cost_impact: null
+  dac: [SEC-02]
+  cites:
+  - standard: CWE
+    ref: CWE-295
+  - standard: OWASP-TOP10
+    ref: "A02:2021 Cryptographic Failures"
+  related: []
+- id: SL-SEC-05
+  status: draft
+  since: 0.1.0
+  title: Shell command built from variables
+  level: MUST
+  statement: Code MUST NOT run a shell command built from variable text through a shell; it MUST pass arguments as a list.
+  why: A file name from a landing folder was passed to a shell command; a file named with a semicolon ran a second command.
+  fix: Call the program directly with an argument list.
+  stage: commit
+  gate: block
+  found_by: static
+  cost_impact: null
+  dac: [SEC-02]
+  cites:
+  - standard: CWE
+    ref: CWE-78
+  related: []
+- id: SL-SEC-06
+  status: draft
+  since: 0.1.0
+  title: Secret value written to output or a log
+  level: MUST
+  statement: Code MUST NOT print, log or write a secret value read from the secret store.
+  why: A connection test printed the password it fetched; the job log was readable by the whole workspace.
+  fix: Log only that the secret was found, never its value.
+  stage: commit
+  gate: block
+  found_by: static
+  cost_impact: null
+  dac: [REL-05]
+  cites:
+  - standard: CWE
+    ref: CWE-532
+  - standard: OWASP-TOP10
+    ref: "A09:2021 Security Logging and Monitoring Failures"
+  related: [SL-SECRET-01]
+- id: SL-SEC-07
+  status: draft
+  since: 0.1.0
+  title: Personal data printed or logged
+  level: SHOULD
+  statement: Code SHOULD NOT print or log samples of columns classified as personal or sensitive.
+  why: A debugging sample of a customer table, with emails and phone numbers, ended up in job logs kept for a year.
+  fix: Log counts and column names, not values; mask values if a sample is needed.
+  stage: commit
+  gate: report
+  found_by: static
+  cost_impact: null
+  dac: [SEC-01]
+  cites:
+  - standard: CWE
+    ref: CWE-532
+  related: [SL-COST-CODE-11]
+- id: SL-SEC-08
+  status: draft
+  since: 0.1.0
+  title: Broad permission grants in code
+  level: SHOULD
+  statement: Permission grants in code SHOULD go to named groups or service identities with the least privilege needed, never to everyone and never all privileges.
+  why: A setup script granted all privileges on a schema to all users so a demo would work, and it was never revoked.
+  fix: Grant specific privileges to a group.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [SEC-02, ENV-02]
+  cites: []
+  related: []

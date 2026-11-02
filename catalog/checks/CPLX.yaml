@@ -1,0 +1,76 @@
+# SL-CPLX: complexity. Thresholds live in core/gates.yaml.
+- id: SL-CPLX-01
+  status: draft
+  since: 0.1.0
+  title: Too many paths through a function
+  level: SHOULD
+  statement: A function SHOULD NOT have more independent paths (cyclomatic complexity) than the threshold in core/gates.yaml.
+  why: A function with 24 paths needed 24 test cases to cover; it had 3.
+  fix: Split it into smaller functions, or replace chains of conditions with a lookup table.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: []
+  cites: []
+  related: [SL-CPLX-02]
+- id: SL-CPLX-02
+  status: draft
+  since: 0.1.0
+  title: Function too hard to read
+  level: SHOULD
+  statement: A function SHOULD NOT score above the cognitive complexity threshold in core/gates.yaml; nesting counts extra.
+  why: Five levels of nested conditions made a pricing rule unreadable, and two reviewers missed a wrong branch.
+  fix: Return early for simple cases and extract nested blocks into named functions.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: []
+  cites: []
+  related: [SL-CLEAN-01]
+- id: SL-CPLX-03
+  status: draft
+  since: 0.1.0
+  title: Function too long
+  level: SHOULD
+  statement: A function SHOULD NOT have more statements than the threshold in core/gates.yaml.
+  why: A 400-line job function mixed reading, five transforms and writing; nobody could change one step safely.
+  fix: Extract each step into its own function.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: []
+  cites: []
+  related: [SL-PURE-02]
+- id: SL-CPLX-04
+  status: draft
+  since: 0.1.0
+  title: Dead code
+  level: SHOULD
+  statement: The repository SHOULD NOT keep functions, classes or modules that nothing uses.
+  why: An unused copy of an old transform was edited by mistake during an incident instead of the live one.
+  fix: Delete it; history keeps it.
+  stage: pr
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: []
+  cites: []
+  related: []
+- id: SL-CPLX-05
+  status: draft
+  since: 0.1.0
+  title: Duplicated logic
+  level: SHOULD
+  statement: The same block of logic SHOULD NOT be copied into several places; it SHOULD live in one function.
+  why: A tax rule was copied into four jobs; a rate change was applied to three of them.
+  fix: Move the logic into one shared function and call it.
+  stage: nightly
+  gate: report
+  found_by: static
+  cost_impact: null
+  dac: []
+  cites: []
+  related: []

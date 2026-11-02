@@ -1,0 +1,38 @@
+# Standards a check may cite. Cite, never restate.
+# verified: true only when the ref style was read on the primary source.
+CWE:
+  name: Common Weakness Enumeration (MITRE)
+  version: "4.x"
+  licence: free to use with attribution
+  ref_style: CWE id, for example CWE-89
+  verified: false
+OWASP-TOP10:
+  name: OWASP Top 10
+  version: "2021"
+  licence: CC BY-SA 4.0
+  ref_style: category id and name, for example "A03:2021 Injection"
+  verified: false   # the 2025 edition exists; move to it once its final ids are checked
+OPENSSF-SCORECARD:
+  name: OpenSSF Scorecard checks
+  version: "v5"
+  licence: Apache-2.0
+  ref_style: check name, for example Pinned-Dependencies
+  verified: false
+SARIF:
+  name: Static Analysis Results Interchange Format (OASIS)
+  version: "2.1.0"
+  licence: OASIS open standard
+  ref_style: section or property path, for example result.ruleId
+  verified: false
+PEP-8:
+  name: PEP 8, Style Guide for Python Code
+  version: "current"
+  licence: public domain
+  ref_style: section name, for example "Naming Conventions"
+  verified: false
+SPDX:
+  name: SPDX licence list (Linux Foundation)
+  version: "current"
+  licence: CC0
+  ref_style: licence identifier, for example Apache-2.0
+  verified: false

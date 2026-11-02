@@ -1,0 +1,51 @@
+# Purity spec (SL-013). Product-neutral. The concrete calls for each category live in bindings/<platform>.yaml.
+#
+# A function is:
+#   impure   if it, or any function it calls in the repository, makes a call in an IMPURE category,
+#            or does one of the IMPURE_ACTS below. The report names the category, the call and the line,
+#            and the call chain when the side effect is in a called function.
+#   pure     if every call it makes is in a PURE category or is to a repository function already found pure,
+#            and it does none of the IMPURE_ACTS.
+#   unknown  otherwise: it calls something the checker can't see into. Unknown counts as not pure.
+# A developer may mark a function pure. The mark never overrides an impure verdict (SL-PURE-05);
+# it turns an unknown into pure, and the test-time guard then checks it.
+
+impure_categories:
+  table_read: Reads a table, file or stream.
+  table_write: Writes, merges, deletes or changes a table, file or stream.
+  catalog_change: Creates, drops or alters schemas, tables, views or permissions.
+  platform_utility: Calls the platform's utility library (files, secrets, widgets, notebook control).
+  network: Calls another system over the network.
+  local_files: Opens, writes or deletes local files.
+  clock: Reads the current date or time.
+  randomness: Creates random values or generated ids.
+  environment: Reads environment variables or process settings.
+  output: Prints, logs or displays.
+  engine_action: Makes the engine run and return a result (count, collect, show, take, write).
+  engine_state: Caches, persists, changes engine settings or registers temporary views.
+  global_state: Assigns to a global or module-level variable, or changes an argument in place.
+  global_session: Uses an engine session that was not passed in as a parameter.
+
+pure_categories:
+  lazy_transform: Engine operations that return a new dataset without running anything (select, filter, join, group and aggregate, union, de-duplicate, add a column).
+  column_expression: Column functions and expressions, except the non-repeatable ones listed under clock and randomness.
+  standard_pure: Standard-library functions with no side effects (maths, text handling, regular expressions, date arithmetic on given values).
+  data_structures: Building and reading local lists, dictionaries, tuples and other values.
+
+unknown_rule: >-
+  A call to a third-party library not listed in either set, a call through a function passed in as an
+  argument, dynamic attribute access, or a call the checker can't resolve, gives "unknown".
+
+test_time_guard:
+  what: During unit tests of functions classed or marked pure, every call in table_read, table_write,
+    catalog_change, platform_utility and network raises an error, so a hidden side effect fails the test.
+  repeat: Each pure-function test also runs the function twice on the same input and compares the outputs.
+
+report:
+  per_module: counts of pure, impure, unknown
+  per_function: verdict, reasons with lines, call chain, has_test, cyclomatic, cognitive
+  lists:
+    could_be_pure: impure only through table_read, table_write, clock, randomness or global_session,
+      which can all be passed in; each gets a refactor hint
+    pure_untested: pure functions with no test that calls them (SL-TEST-02)
+    complex_untested: over a complexity threshold and not covered

@@ -1,0 +1,65 @@
+# SL-STYLE: style. All auto-fixable; none block.
+- id: SL-STYLE-01
+  status: draft
+  since: 0.1.0
+  title: Code not in the agreed format
+  level: SHOULD
+  statement: Code SHOULD be formatted by the agreed formatter, so changes show only real edits.
+  why: Pull requests mixed reformatting with logic changes, and a wrong condition hid in 600 lines of whitespace changes.
+  fix: Run the formatter on commit.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-02]
+  cites:
+  - standard: PEP-8
+    ref: Code Lay-out
+  related: []
+- id: SL-STYLE-02
+  status: draft
+  since: 0.1.0
+  title: Basic lint errors
+  level: SHOULD
+  statement: Code SHOULD pass the basic lint rules for undefined names, unused variables and syntax problems.
+  why: A misspelt variable name in a rarely used branch failed only when that branch ran in production.
+  fix: Fix the reported names.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-STYLE-03
+  status: draft
+  since: 0.1.0
+  title: Query text not in the agreed format
+  level: SHOULD
+  statement: Query files and query cells SHOULD follow the agreed dialect rules for layout, case, aliases and explicit join types.
+  why: An implicit join written as a comma between tables hid a missing condition in a long query.
+  fix: Run the query formatter and fix what it can't.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: [SL-COST-CODE-14]
+- id: SL-STYLE-04
+  status: draft
+  since: 0.1.0
+  title: Names that break the convention
+  level: SHOULD
+  statement: Names of functions, variables, classes and tables SHOULD follow the agreed naming convention.
+  why: Mixed naming styles made the same column appear under three spellings across jobs.
+  fix: Rename to the convention.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: null
+  dac: [REL-02]
+  cites:
+  - standard: PEP-8
+    ref: Naming Conventions
+  related: []

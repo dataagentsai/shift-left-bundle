@@ -1,0 +1,68 @@
+# DAC obligation ids this catalog may link to, copied from dataagentsai/data-platform-catalog.
+# Source commit: 6d4f3cd. Refresh with: uv run scripts/sync_dac_ids.py
+CFG-01: Everything that runs was declared
+CFG-02: Cross-cutting concerns are on by default
+CFG-03: Every run records the configuration it ran under
+COST-02: Platform cost guardrails
+COST-03: Cost can be traced to a team and a job
+COST-04: No compute running when nothing needs it
+DEL-01: Detecting hard deletes at the source
+DEL-03: Deletes flow through derived tables
+DES-04: Grain and keys of every table
+DQ-01: Data quality rules written with owners
+DQ-02: What happens to a row that fails a rule
+DQ-03: One poison record does not stop the whole load
+DQ-04: A source goes quiet or sends far too little
+DUP-01: Same batch or file arriving twice
+DUP-02: Rerunning a job leaves the result unchanged
+DUP-03: Duplicates already inside the source
+DUP-04: Replayed events in a stream
+ENV-01: Separate environments with separate data
+ENV-02: Access through groups and service identities
+FLOW-01: Data flows one way through the layers
+GATE-01: Nothing passes by absence
+GATE-02: A contract is never loosened to make a job pass
+GATE-03: Agents propose, gates decide
+HEAL-01: A self-healing fix goes through the same gates
+HIST-03: Handing over from history load to incremental loads
+HIST-04: Reloading or backfilling a past period
+LATE-01: Late and corrected rows rebuild the right periods
+LATE-02: Facts arriving before their reference data
+LATE-03: Event time, watermarks and late events in streams
+LATE-04: Time zones and business dates
+LIN-01: Every hop emits lineage
+OPS-01: Alerts reach someone who can act
+OPS-03: Every run leaves a record
+ORCH-01: Jobs wait for their data, not the clock
+ORCH-02: Retries for passing failures only
+ORCH-03: Restart after failing in the middle
+ORCH-04: Two runs writing the same table at once
+ORCH-05: Recovery time and data loss limits
+ORCH-06: Stream restarts from where it stopped
+PERF-02: Freshness target measured end to end
+PERF-05: Storage layout and file sizes kept healthy
+PROF-01: Every dataset is profiled and drift is visible
+REC-01: Counts and totals reconciled layer by layer
+REC-03: Tolerances and who signs off differences
+REC-05: Reconciliation names the hop that drifted
+REL-01: Everything that runs is in version control
+REL-02: Branching and code review
+REL-03: Automated promotion of the same build
+REL-04: Configuration per environment, not in code
+REL-05: No secrets in the repository
+REL-06: Infrastructure defined as code
+REL-07: Rolling back a release, including its data
+SCD-02: History rows stay correct on reruns and out-of-order changes
+SCD-04: Facts joined to the right version of history
+SCH-01: A new column appears at the source
+SCH-02: A column renamed, removed or retyped
+SEC-01: Personal and sensitive data found and classified
+SEC-02: Who can see what
+SEC-03: Retention and the right to be forgotten
+SEC-04: Access is audited
+SERV-01: A contract with each consumer
+SERV-02: Consumers can tell whether data is complete
+SERV-04: Business definitions live in one place
+SIM-01: Every incident kind has a planted test
+TEST-03: Automated tests run on every change
+TEST-05: Failure, rerun and recovery tested on purpose

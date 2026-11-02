@@ -1,0 +1,37 @@
+# Gate policy as data (SL-014, decision D5: noise kills adoption).
+levels:
+  block: The change can't merge or deploy until the finding is fixed or accepted in the baseline.
+  warn: Shown on the pull request, on the changed line. Doesn't stop the merge.
+  report: Listed in REVIEW.md only. Used for counts, trends and the gap report.
+
+# Each check sets its starting gate. A team's config can lower or raise any gate.
+# A check may move from warn to block only when both promotion conditions hold.
+promotion:
+  min_weeks_as_warn: 4
+  max_false_alarm_rate: 0.10   # share of findings marked "wrong" by developers on pull requests
+
+baseline:
+  file: .shiftleft-baseline.json
+  purpose: Findings that existed when the bundle was adopted. They never block; only new findings do.
+  fingerprint: check id + file path + a hash of the code at the finding with whitespace removed
+  # Line numbers are not part of the fingerprint, so moving code doesn't create "new" findings.
+  expiry_days: null            # null = old findings stay accepted until fixed; a team may set a deadline
+
+coverage:
+  measure: changed lines only
+  changed_lines_min: 0.80      # SL-TEST-01
+  branch: true                 # count both sides of every if
+
+mutation:
+  scope: pure functions only
+  min_score: 0.70              # SL-TEST-05, reported nightly, never blocks at start
+
+complexity:
+  cyclomatic_max: 10           # SL-CPLX-01
+  cognitive_max: 15            # SL-CPLX-02
+  statements_max: 50           # SL-CPLX-03
+  arguments_max: 5             # SL-CLEAN-02
+
+dependencies:
+  block_at_severity: high      # SL-DEP-01: high and critical block; medium and low warn
+  unmaintained_after_days: 730 # SL-DEP-04

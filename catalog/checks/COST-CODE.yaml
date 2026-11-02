@@ -1,0 +1,316 @@
+# SL-COST-CODE: cost in code and query text. Normative: edit here. No product names (they live in bindings/).
+- id: SL-COST-CODE-01
+  status: draft
+  since: 0.1.0
+  title: Whole dataset pulled into one process without a limit
+  level: MUST
+  statement: Code MUST NOT bring a whole distributed dataset into the single coordinating process, unless a limit or an aggregate makes it small first.
+  why: A report job converted a full table to a local data frame for a chart. It ran fine on test data and crashed the coordinating process in production after a 40-minute scan.
+  fix: Aggregate or limit before collecting, or write the result to a table and read that.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-03, SL-PURE-06]
+- id: SL-COST-CODE-02
+  status: draft
+  since: 0.1.0
+  title: Engine query or read inside a loop
+  level: SHOULD
+  statement: Code SHOULD NOT start a query or a table read inside a loop; it SHOULD express the work as one set-based query.
+  why: A loop over 300 store ids ran one query per store, each with its own scan and start-up time, and the job took two hours instead of four minutes.
+  fix: Join or filter on the whole set of keys in one query.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-08]
+- id: SL-COST-CODE-03
+  status: draft
+  since: 0.1.0
+  title: Row-by-row loop over collected results
+  level: SHOULD
+  statement: Code SHOULD NOT collect rows and then loop over them in the coordinating process to do work the engine can do in parallel.
+  why: Rows were collected and updated one by one with a call per row; the cluster sat idle while one process did all the work.
+  fix: Replace the loop with column expressions, a join, or a grouped operation.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-01]
+- id: SL-COST-CODE-04
+  status: draft
+  since: 0.1.0
+  title: Row-by-row custom function where a built-in exists
+  level: SHOULD
+  statement: Code SHOULD use the engine's built-in functions instead of a row-by-row custom function when a built-in does the same job.
+  why: A custom function that upper-cased a column made every row cross into a separate interpreter and back, and the step ran ten times slower than the built-in.
+  fix: Use the built-in function; if none exists, prefer a vectorised (batch) custom function.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-PLAN-03]
+- id: SL-COST-CODE-05
+  status: draft
+  since: 0.1.0
+  title: Columns added one at a time in a loop
+  level: SHOULD
+  statement: Code SHOULD add many columns in one projection, not one call per column inside a loop.
+  why: Adding 200 columns in a loop built a plan 200 levels deep; planning alone took minutes before any data moved.
+  fix: Build the list of column expressions and add them in one select.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: []
+- id: SL-COST-CODE-06
+  status: draft
+  since: 0.1.0
+  title: Full count used to test for emptiness
+  level: SHOULD
+  statement: Code SHOULD test whether a dataset is empty by fetching at most one row, not by counting every row.
+  why: An "is there anything new?" check counted a billion-row table every hour.
+  fix: Take one row, or use the engine's emptiness test.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-04]
+  cites: []
+  related: []
+- id: SL-COST-CODE-07
+  status: draft
+  since: 0.1.0
+  title: Cached data never released, or cached and used once
+  level: SHOULD
+  statement: Data cached in memory SHOULD be used more than once and SHOULD be released when no longer needed.
+  why: Three large intermediate results were cached and never released; later steps spilled to disk and the job ran twice as long.
+  fix: Cache only what is reused, and release it after the last use.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: low
+  dac: [COST-02]
+  cites: []
+  related: []
+- id: SL-COST-CODE-08
+  status: draft
+  since: 0.1.0
+  title: Same table read many times in one job
+  level: SHOULD
+  statement: A job SHOULD read each source table once and reuse the result, rather than reading it again in several places.
+  why: One job read the same orders table in five functions, scanning the same files five times.
+  fix: Read once in the job's entry point and pass the dataset to the functions that need it.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-PLAN-06, SL-PURE-02]
+- id: SL-COST-CODE-09
+  status: draft
+  since: 0.1.0
+  title: Large output forced into one partition
+  level: SHOULD
+  statement: Code SHOULD NOT force a large dataset into a single partition before writing it.
+  why: A debugging line that merged output into one file was left in; a 200 GB write ran on one core for six hours.
+  fix: Remove the forced single partition, or apply it only to small outputs.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [PERF-05]
+  cites: []
+  related: []
+- id: SL-COST-CODE-10
+  status: draft
+  since: 0.1.0
+  title: Broadcast inside a loop
+  level: MUST
+  statement: Code MUST NOT broadcast a dataset to every worker inside a loop.
+  why: A lookup table was broadcast on every loop pass, sending the same data to every worker hundreds of times.
+  fix: Broadcast once, before the loop, or join once on the whole set.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-02]
+- id: SL-COST-CODE-11
+  status: draft
+  since: 0.1.0
+  title: Debugging actions left in production code
+  level: SHOULD
+  statement: Production code SHOULD NOT keep actions added for debugging, such as printing a sample or counting rows, whose results are thrown away.
+  why: Four leftover row counts each re-ran the whole upstream pipeline, so the job did its work five times.
+  fix: Remove them, or move them behind a debug flag that is off in production.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: [SL-PURE-06]
+- id: SL-COST-CODE-12
+  status: draft
+  since: 0.1.0
+  title: Schema guessed by reading the data
+  level: SHOULD
+  statement: Reads of large or changing sources SHOULD declare the expected schema instead of letting the engine guess it by scanning the data.
+  why: Schema guessing read every file twice, and one day guessed a column as text instead of a number, which broke the next layer.
+  fix: Declare the schema, ideally from the data contract.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [SCH-01]
+  cites: []
+  related: []
+- id: SL-COST-CODE-13
+  status: draft
+  since: 0.1.0
+  title: Every column selected from a wide table
+  level: SHOULD
+  statement: Queries over wide tables SHOULD name the columns they need instead of selecting all columns.
+  why: Selecting all 180 columns of a columnar table read every column from storage when the query used six.
+  fix: List the columns needed.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: []
+- id: SL-COST-CODE-14
+  status: draft
+  since: 0.1.0
+  title: Join with no join condition
+  level: MUST
+  statement: A query MUST NOT join two tables without a join condition unless the cross product is intended and marked as such.
+  why: A missing join key matched every order with every customer; the job produced billions of rows and ran until it was killed.
+  fix: Add the join key. If the cross product is intended, mark it explicitly and keep one side tiny.
+  stage: commit
+  gate: block
+  found_by: static
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-PLAN-01]
+- id: SL-COST-CODE-15
+  status: draft
+  since: 0.1.0
+  title: Function or cast on a partition column in a filter
+  level: SHOULD
+  statement: Filters on a partition or clustering column SHOULD compare the column directly, not a function or cast of it, so the engine can skip files.
+  why: A filter on the year of a date column made the engine read every partition instead of one month's.
+  fix: Rewrite the filter as a range on the raw column.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: high
+  dac: [PERF-05]
+  cites: []
+  related: [SL-COST-PLAN-04]
+- id: SL-COST-CODE-16
+  status: draft
+  since: 0.1.0
+  title: Merge without a predicate that narrows the target
+  level: SHOULD
+  statement: A merge into a large target SHOULD include a condition, such as a date or partition range, that limits which part of the target is scanned.
+  why: A daily merge of yesterday's changes scanned and rewrote files across three years of the target table.
+  fix: Add the partition or date range of the incoming changes to the merge condition.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: high
+  dac: [COST-02, PERF-05]
+  cites: []
+  related: []
+- id: SL-COST-CODE-17
+  status: draft
+  since: 0.1.0
+  title: Whole result sorted with no limit
+  level: SHOULD
+  statement: A query SHOULD NOT sort a whole intermediate result unless the order is used, such as for a limit or a final output.
+  why: A sort in a view that fed an aggregate forced a full shuffle that changed nothing in the answer.
+  fix: Remove the sort, or add the limit it was meant for.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: []
+- id: SL-COST-CODE-18
+  status: draft
+  since: 0.1.0
+  title: Union that removes duplicates when duplicates are impossible or wanted
+  level: SHOULD
+  statement: A query SHOULD use a union that keeps all rows unless removing duplicates is intended, because removing them needs a full shuffle.
+  why: Two date ranges that could never overlap were combined with a de-duplicating union, adding a shuffle of the whole result.
+  fix: Use the keep-all union, and remove duplicates explicitly where they are possible.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: []
+- id: SL-COST-CODE-19
+  status: draft
+  since: 0.1.0
+  title: NOT IN with a subquery
+  level: SHOULD
+  statement: A query SHOULD use NOT EXISTS or an anti join instead of NOT IN with a subquery, because one null in the subquery makes the result empty and the plan is often a slow nested loop.
+  why: A null customer id appeared in the exclusion list and a nightly extract silently returned zero rows.
+  fix: Rewrite as NOT EXISTS or a left anti join.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-PLAN-02]
+- id: SL-COST-CODE-20
+  status: draft
+  since: 0.1.0
+  title: DELETE or UPDATE with no WHERE
+  level: MUST
+  statement: A DELETE or UPDATE statement MUST have a condition, unless clearing the whole table is intended and marked as such.
+  why: A cleanup statement lost its condition in a refactor and emptied a production table.
+  fix: Add the condition, or replace a full clear with an explicit, marked truncate.
+  stage: commit
+  gate: block
+  found_by: static
+  cost_impact: high
+  dac: [REL-07]
+  cites: []
+  related: []
+- id: SL-COST-CODE-21
+  status: draft
+  since: 0.1.0
+  title: Non-repeatable function in a filter
+  level: SHOULD
+  statement: A filter SHOULD NOT depend on a function that changes between runs, such as the current time or a random value; the value SHOULD be passed in.
+  why: A filter on "now minus one day" gave different rows on a rerun, so a backfill could not reproduce the original load.
+  fix: Pass the run date in as a parameter.
+  stage: commit
+  gate: warn
+  found_by: static
+  cost_impact: low
+  dac: [TEST-05]
+  cites: []
+  related: [SL-PURE-03]
