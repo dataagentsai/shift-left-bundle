@@ -97,7 +97,7 @@ def run(ctx: Context, baseline=frozenset()):
             missing.append(m.NAME)
         raw += res.findings
         notes += res.notes
-    raw, refined = refine.apply(raw, ctx.project, ctx.binding.get("refine") or [])
+    raw, refined = refine.apply(raw, ctx.project, ctx.binding.get("refine") or [], ctx.binding.get("refine_settings"))
     notes += refined
     findings, more = finalise(raw, ctx, baseline)
     return findings, notes + more, missing

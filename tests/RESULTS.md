@@ -16,7 +16,7 @@ Score any run with `uv run scripts/score.py findings.json`.
 | 8 | 3 Nov 2026 | run 7 + five PySpark checks from the Sonar comparison; key grown to 106 planted and 19 traps | 102/106 | 103/106 | 0/19 | 77 |
 | 2 | 2 Nov 2026 | run 1 + CostLens oss-core, SparkDoctor and 2 pyspark-antipattern rules, our materialized-view, grant and bundle rules, notebook %sql extraction | 64/101 | 66/101 | 0/16 | 65 |
 
-Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`, `runs/run-5-tier5.md`, `runs/run-6-patterns.md`. Real repos: `runs/real-1-ecom.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
+Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`, `runs/run-5-tier5.md`, `runs/run-6-patterns.md`. Real repos: `runs/real-1-ecom.md`, `runs/real-2-dlt.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
 
 ## What run 0 taught us
 

@@ -363,3 +363,12 @@ refine:
   - ddl-in-loop             # spark.sql in a loop that only runs CREATE / DROP / ALTER: drop
   - display-is-output       # display(...) counted as a discarded action: drop
   - markdown-unicode        # RUF001-003 on # MAGIC markdown lines: drop
+  - platform-only-import    # PLC0415 for dlt / databricks.* imported inside a function: drop
+  - print-in-cli            # T201 in a script with a __main__ guard: report
+  - collect-small-table     # collect() of a table matching refine_settings.small_tables: drop
+
+# Settings for the noise rules. A team adds its own small tables here.
+refine_settings:
+  platform_modules: [dlt, databricks, pyspark.dbutils]     # exist only on the platform, so imported late on purpose
+  small_tables: ["*_config", "*config", "*_master", "*_lookup", "dim_date"]   # control and lookup tables, collected whole on purpose
+  group_per_file: [SL-STYLE-01, SL-STYLE-03]              # formatting: one finding per file, the fix is running the formatter

@@ -8,6 +8,7 @@ The binding switches rules on by name (`refine:`). Every drop or lowered gate is
 """
 import ast
 import collections
+import fnmatch
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -219,6 +220,67 @@ def r_markdown_unicode(f, project):
     return "drop" if _line(project / f.file, f.line).lstrip().startswith("# MAGIC") else None
 
 
+IMPORT = re.compile(r"^\s*(?:from\s+([\w.]+)|import\s+([\w.]+))")
+
+
+def r_platform_only_import(f, project, settings):
+    """PLC0415 for modules that exist only on the platform (dlt, databricks.sdk): importing them inside the function is deliberate."""
+    if f.tool_rule != "PLC0415":
+        return None
+    m = IMPORT.match(_line(project / f.file, f.line))
+    mod = (m[1] or m[2]) if m else ""
+    roots = settings.get("platform_modules") or []
+    return "drop" if any(mod == r or mod.startswith(r + ".") for r in roots) else None
+
+
+def r_print_in_cli(f, project, settings):
+    """T201 in a command-line script (has a __main__ guard): print is its output."""
+    if f.tool_rule != "T201":
+        return None
+    return "report" if re.search(r"""^if\s+__name__\s*==\s*["']__main__["']""", _text(project / f.file), re.M) else None
+
+
+def _table_name(call):
+    """Constant text of the table argument of spark.table(...) / read.table(...), with interpolations removed."""
+    if not call.args:
+        return ""
+    a = call.args[0]
+    return "".join(v.value for v in ast.walk(a) if isinstance(v, ast.Constant) and isinstance(v.value, str))
+
+
+def _source_tables(node, tree, before, depth=0):
+    """Table names a chain reads, following a name back through up to three earlier assignments
+    (df = spark.table(...); df = df.filter(...); df.collect())."""
+    names = []
+    n = node
+    while isinstance(n, (ast.Call, ast.Attribute, ast.Subscript)):
+        if isinstance(n, ast.Call) and _chain(n)[-1:] == ["table"]:
+            names.append(_table_name(n))
+        n = n.func if isinstance(n, ast.Call) else n.value
+    if isinstance(n, ast.Name) and depth < 3:
+        assigns = [a for a in ast.walk(tree) if isinstance(a, ast.Assign) and a.lineno < before
+                   and any(isinstance(t, ast.Name) and t.id == n.id for t in a.targets)]
+        if assigns:
+            last = max(assigns, key=lambda a: a.lineno)
+            names += _source_tables(last.value, tree, last.lineno, depth + 1)
+    return names
+
+
+def r_collect_small_table(f, project, settings):
+    """collect() of a table the team declared small (control and config tables), via `small_tables` patterns."""
+    if f.check != "SL-COST-CODE-01" or not f.line:
+        return None
+    pats = settings.get("small_tables") or []
+    tree = _tree(project / f.file)
+    if not pats or not tree:
+        return None
+    for c in _nodes_at(tree, f.line, ast.Call):
+        if _chain(c)[-1:] == ["collect"]:
+            tables = [t.rsplit(".", 1)[-1] for t in _source_tables(c, tree, c.lineno)]
+            return "drop" if tables and all(any(fnmatch.fnmatch(t, p) for p in pats) for t in tables) else None
+    return None
+
+
 RULES = {
     "run-target-names": r_run_target_names,
     "sql-identifiers-only": r_sql_identifiers_only,
@@ -230,11 +292,33 @@ RULES = {
     "ddl-in-loop": r_ddl_in_loop,
     "display-is-output": r_display_is_output,
     "markdown-unicode": r_markdown_unicode,
+    "platform-only-import": r_platform_only_import,
+    "print-in-cli": r_print_in_cli,
+    "collect-small-table": r_collect_small_table,
 }
+WITH_SETTINGS = {r_platform_only_import, r_print_in_cli, r_collect_small_table}
 
 
-def apply(findings, project: Path, enabled):
+def group_per_file(findings, checks):
+    """One finding per file for checks like formatting, where 100 lines out of format is one fix: run the formatter."""
+    groups = collections.defaultdict(list)
+    out = []
+    for f in findings:
+        (groups[(f.check, f.file)] if f.check in checks and f.file != "." else out).append(f)
+    merged = 0
+    for (_, _), fs in groups.items():
+        fs.sort(key=lambda x: x.line or 0)
+        first = fs[0]
+        if len(fs) > 1:
+            first.message = f"{len(fs)} formatting differences in this file, first: {first.message}"
+            merged += len(fs) - 1
+        out.append(first)
+    return out, merged
+
+
+def apply(findings, project: Path, enabled, settings=None):
     """Return (kept findings, notes). A lowered gate is set on the finding; the engine keeps the lower of the two."""
+    settings = settings or {}
     _text.cache_clear()
     _tree.cache_clear()
     rules = [(n, RULES[n]) for n in enabled if n in RULES]
@@ -244,7 +328,7 @@ def apply(findings, project: Path, enabled):
         for name, rule in rules:
             if f.file == "." or Path(f.file).is_absolute():
                 break
-            verdict = rule(f, project)
+            verdict = rule(f, project, settings) if rule in WITH_SETTINGS else rule(f, project)
             if verdict:
                 break
         if verdict == "drop":
@@ -254,7 +338,9 @@ def apply(findings, project: Path, enabled):
             f.gate = verdict
             lowered[name] += 1
         kept.append(f)
+    kept, merged = group_per_file(kept, set(settings.get("group_per_file") or []))
     notes = [f"refine {n}: dropped {c} false alarm(s)" for n, c in sorted(dropped.items())]
+    notes += [f"refine group-per-file: merged {merged} finding(s) into one per file"] if merged else []
     notes += [f"refine {n}: lowered {c} finding(s) to report" for n, c in sorted(lowered.items())]
     unknown = [n for n in enabled if n not in RULES]
     notes += [f"refine: unknown rule {n} in the binding; ignored" for n in unknown]

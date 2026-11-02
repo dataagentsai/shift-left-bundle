@@ -54,7 +54,25 @@ CASES = [
      ("SL-COST-CODE-11", "m.py", 1, "code_spark_action_result_discarded", ".show() result discarded"), "keep"),
     ("dash in notebook markdown", {"nb.py": NB + "# MAGIC scored 1–5\n"}, ("SL-CLEAN-20", "nb.py", 2, "RUF003", "dash"), "drop"),
     ("dash in a code comment", {"m.py": "x = 1  # 1–5\n"}, ("SL-CLEAN-20", "m.py", 1, "RUF003", "dash"), "keep"),
+    # ---- second real repo (DLT framework)
+    ("dlt imported inside a function", {"m.py": "def f():\n    import dlt\n"}, ("SL-CLEAN-20", "m.py", 2, "PLC0415", "import"), "drop"),
+    ("databricks sdk imported late", {"m.py": "def f():\n    from databricks.sdk import WorkspaceClient\n"},
+     ("SL-CLEAN-20", "m.py", 2, "PLC0415", "import"), "drop"),
+    ("ordinary module imported late", {"m.py": "def f():\n    import json\n"}, ("SL-CLEAN-20", "m.py", 2, "PLC0415", "import"), "keep"),
+    ("print in a command-line script", {"m.py": 'print("created")\nif __name__ == "__main__":\n    main()\n'},
+     ("SL-CLEAN-17", "m.py", 1, "T201", "print"), "report"),
+    ("collect of a config table", {"m.py": 'rows = spark.table(f"{fq}.platform_config").collect()\n'},
+     ("SL-COST-CODE-01", "m.py", 1, "SDK002", "collect"), "drop"),
+    ("collect of a master table through a variable", {"m.py": 'master = spark.table(f"{fq}.source_master").filter(c)\nrows = master.collect()\n'},
+     ("SL-COST-CODE-01", "m.py", 2, "SDK002", "collect"), "drop"),
+    ("collect of a master table filtered twice", {"m.py": 'm = spark.table(f"{fq}.dataset_master").filter(a)\nm = m.filter(b)\nrows = m.collect()\n'},
+     ("SL-COST-CODE-01", "m.py", 3, "SDK002", "collect"), "drop"),
+    ("collect of a fact table filtered twice", {"m.py": 'm = spark.table("silver.orders").filter(a)\nm = m.filter(b)\nrows = m.collect()\n'},
+     ("SL-COST-CODE-01", "m.py", 3, "SDK002", "collect"), "keep"),
+    ("collect of a fact table", {"m.py": 'rows = spark.table("silver.orders").collect()\n'},
+     ("SL-COST-CODE-01", "m.py", 1, "SDK002", "collect"), "keep"),
 ]
+SETTINGS = {"platform_modules": ["dlt", "databricks"], "small_tables": ["*_config", "*_master"]}
 
 
 @pytest.mark.parametrize("name, tree, finding, expected", CASES, ids=[c[0] for c in CASES])
@@ -65,9 +83,19 @@ def test_refine_rules(tmp_path, name, tree, finding, expected):
         p.write_text(textwrap.dedent(body))
     check, file, line, rule, msg = finding
     f = Finding(check, file, line, "tool", rule, msg)
-    kept, notes = refine.apply([f], tmp_path, list(refine.RULES))
+    kept, notes = refine.apply([f], tmp_path, list(refine.RULES), SETTINGS)
     got = "drop" if not kept else (kept[0].gate or "keep")
     assert got == expected, notes
+
+
+def test_formatting_grouped_per_file(tmp_path):
+    fs = [Finding("SL-STYLE-03", "a.sql", n, "sqlfluff", "LT02", "indent") for n in (9, 3, 5)]
+    fs += [Finding("SL-STYLE-03", "b.sql", 1, "sqlfluff", "LT05", "long"), Finding("SL-SEC-01", "a.sql", 4, "t", "r", "m")]
+    kept, notes = refine.apply(fs, tmp_path, [], {"group_per_file": ["SL-STYLE-03"]})
+    got = sorted((f.check, f.file, f.line) for f in kept)
+    assert got == [("SL-SEC-01", "a.sql", 4), ("SL-STYLE-03", "a.sql", 3), ("SL-STYLE-03", "b.sql", 1)]
+    assert [f.message for f in kept if f.file == "a.sql" and f.check == "SL-STYLE-03"] == ["3 formatting differences in this file, first: indent"]
+    assert notes == ["refine group-per-file: merged 2 finding(s) into one per file"]
 
 
 def test_rules_off_keep_everything(tmp_path):
