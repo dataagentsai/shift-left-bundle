@@ -171,6 +171,11 @@ checks:
   SL-CLEAN-26: {tool: patterns, rules: [sl-inline-complex-condition], status: build, note: "Palantir PySpark style guide; more than patterns.max_inline_conditions conditions in filter, where or when"}
   SL-CLEAN-27: {tool: dbt-bouncer, rules: [check_model_hard_coded_references], status: adopt, note: "MO009"}
   SL-CLEAN-28: {tool: dbt-bouncer, rules: [check_lineage_source_cannot_be_used], status: adopt, note: "LI003 on marts and intermediate; dbt-project-evaluator not needed"}
+  SL-CLEAN-29: {tool: patterns, rules: [sl-null-no-type], status: build, note: "lit(None) not cast, as a withColumn value, a select alias or a withColumns value; Sonar S7195"}
+  SL-CLEAN-30: {tool: patterns, rules: [sl-window-no-frame], status: build, note: "aggregate .over(w) where w has orderBy and no rowsBetween/rangeBetween; ranking functions skipped; Sonar S7181"}
+  SL-CLEAN-31: {tool: patterns, rules: [sl-join-no-how], status: build, note: "join(other, on) with no how; Sonar S7192"}
+  SL-CLEAN-32: {tool: patterns, rules: [sl-dedupe-all-columns], status: build, note: "dropDuplicates() / drop_duplicates() with no columns; Sonar S7182"}
+  SL-COST-CODE-24: {tool: patterns, rules: [sl-chained-withcolumn], status: build, note: "more than patterns.max_chained_withcolumn withColumn calls in one chain; Sonar S7191"}
   SL-SETUP-10: {tool: dbt-bouncer, rules: [check_model_description_populated], status: adopt, note: "MO021; dbt-score not needed"}
   SL-SEM-01: {tool: metricview, rules: [yaml-schema-1.1, expression-parse], status: build, note: "YAML spec 1.1 per Databricks docs (checked 2 Nov 2026); dbt semantic models via dbt parse"}
   SL-SEM-02: {tool: metricview, rules: [measure-no-aggregate], status: build}
@@ -334,6 +339,7 @@ purity:
 # Settings for our own pattern rules (adapters/patterns.py).
 patterns:
   max_inline_conditions: 3          # SL-CLEAN-26: more than this many & / | terms inline is flagged
+  max_chained_withcolumn: 3         # SL-COST-CODE-24: more than this many withColumn calls in one chain is flagged
   personal_columns: [email, phone, mobile, ssn, aadhaar, pan_number, passport, dob, date_of_birth, birth_date,
                      address, street, postcode, zipcode, first_name, last_name, full_name, ip_address, card_number, iban]
   # SL-DEP-05: Databricks Runtime (LTS) -> Spark and Python. From the Databricks Runtime release notes; recheck on each new LTS.

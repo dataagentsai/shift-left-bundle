@@ -515,6 +515,31 @@ planted:
   file: sql/metric_view_sales.sql
   anchor: null
   note: no known-answer test for the metrics
+- id: P102
+  check: SL-CLEAN-29
+  file: src/shop/customer_report.py
+  anchor: .withColumn("discount_code", F.lit(None))
+  note: null column with no type (added 3 Nov, SL-065)
+- id: P103
+  check: SL-CLEAN-30
+  file: src/shop/customer_report.py
+  anchor: return orders.withColumn("spend_to_date", F.sum("amount").over(by_customer))
+  note: running sum over an ordered window with no frame
+- id: P104
+  check: SL-CLEAN-31
+  file: src/shop/customer_report.py
+  anchor: return orders.join(customers, "customer_id")
+  note: join type left to the default
+- id: P105
+  check: SL-CLEAN-32
+  file: src/shop/customer_report.py
+  anchor: return orders.dropDuplicates()
+  note: whole-row de-duplication
+- id: P106
+  check: SL-COST-CODE-24
+  file: src/shop/customer_report.py
+  anchor: return (orders
+  note: four withColumn calls in one chain
 traps:
 - id: T01
   checks:
@@ -617,3 +642,21 @@ traps:
   file: sql/metric_view_finance.sql
   anchor: '    comment: Calendar month of the order'
   note: described dimension
+- id: T17
+  checks:
+  - SL-CLEAN-30
+  file: src/shop/customer_report.py
+  anchor: return (addresses.withColumn("rn", F.row_number().over(newest_first))
+  note: ranking function needs no frame
+- id: T18
+  checks:
+  - SL-CLEAN-32
+  file: src/shop/customer_report.py
+  anchor: return customers.dropDuplicates(["customer_id"])
+  note: de-duplication on a key
+- id: T19
+  checks:
+  - SL-CLEAN-29
+  file: src/shop/customer_report.py
+  anchor: .withColumn("channel_note", F.lit(None).cast("string"))
+  note: typed null column

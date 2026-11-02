@@ -13,6 +13,7 @@ Score any run with `uv run scripts/score.py findings.json`.
 | 5 | 2 Nov 2026 | run 3 + metric view checks, dbt parse + dbt-bouncer, empty-table plan check, dead code grouped by module | 88/101 | 90/101 | 0/16 | 64 |
 | 6 | 2 Nov 2026 | run 5 + our own pattern rules (secret printed, personal data shown, remote test session, count-only test, logic in notebooks, column as attribute, %run chain, inline condition, runtime match) | 97/101 | 98/101 | 0/16 | 66 |
 | 7 | 2 Nov 2026 | run 6 + noise rules learned on the first real repo (refine.py) | 97/101 | 98/101 | 0/16 | 66 |
+| 8 | 3 Nov 2026 | run 7 + five PySpark checks from the Sonar comparison; key grown to 106 planted and 19 traps | 102/106 | 103/106 | 0/19 | 77 |
 | 2 | 2 Nov 2026 | run 1 + CostLens oss-core, SparkDoctor and 2 pyspark-antipattern rules, our materialized-view, grant and bundle rules, notebook %sql extraction | 64/101 | 66/101 | 0/16 | 65 |
 
 Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`, `runs/run-5-tier5.md`, `runs/run-6-patterns.md`. Real repos: `runs/real-1-ecom.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
@@ -103,3 +104,14 @@ Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-run
 - **Still missed (4)**: a row count inside a print (P010), a SELECT * inside an f-string (P014), a boolean flag
   argument (P074, strict profile only) and `sum` shadowed by a wildcard import (P078, flagged on the import line,
   not the use). None need a new tool; leave them for Tier 6 unless a real repo shows them.
+
+## What run 8 taught us (3 Nov)
+
+- **The key grew for the first time**: 5 planted problems (P102–P106) and 3 traps (T17–T19) in
+  `src/shop/customer_report.py`, one each for the five new checks. Scores before run 8 are out of 101 and 16 traps.
+- **All 5 caught, 0 traps hit.** The traps are the look-alikes: a ranking window (needs no frame), a de-duplication on
+  a key, a typed null column.
+- **The new rules found 3 problems already in the shop that the key never listed**: a typeless null column in
+  `wide_orders`, a join with no type in the notebook, and a long withColumn chain in `gold_kpis`.
+- **On the real e-commerce repo the five rules added 3 findings, all report level and all true** (chains of 4–7
+  withColumn calls). Its author states every join type and only uses ranking windows.

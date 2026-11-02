@@ -447,3 +447,67 @@
   dac: [LIN-01]
   cites: []
   related: [SL-CLEAN-27]
+- id: SL-CLEAN-29
+  status: draft
+  since: 0.3.0
+  title: Empty column added with no type
+  level: SHOULD
+  statement: A column filled with nulls SHOULD be given its data type when it is added, so the table schema does not depend on later rows.
+  why: A placeholder column added as a typed-less null had no data type; the table write dropped it, and a later union with the typed table failed in production.
+  fix: Cast the null to the column's type when adding it, for example a null cast to string.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [pyspark, notebook]
+  cost_impact: null
+  dac: [SCH-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-30
+  status: draft
+  since: 0.3.0
+  title: Ordered window aggregate with no explicit frame
+  level: SHOULD
+  statement: An aggregate over an ordered window SHOULD state its frame, because ordering silently changes the default frame from the whole partition to a running range.
+  why: Adding an ordering to a window turned a customer total into a running total; rows with the same date were counted together, and the report was wrong for a month before reconciliation caught it.
+  fix: State the frame (rows or range, start and end) on every ordered window used by an aggregate; ranking functions need none.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [pyspark, notebook]
+  cost_impact: null
+  dac: [REC-01]
+  cites: []
+  related: []
+- id: SL-CLEAN-31
+  status: draft
+  since: 0.3.0
+  title: Join type left to the default
+  level: SHOULD
+  statement: A join SHOULD state its type, so the reader sees whether unmatched rows are kept or dropped.
+  why: An inner join written with the default type silently dropped orders whose customer had not arrived yet; a left join was meant.
+  fix: Pass the join type explicitly, even when it is inner.
+  stage: commit
+  gate: report
+  found_by: static
+  applies_to: [pyspark, notebook]
+  cost_impact: null
+  dac: [DES-04, LATE-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-32
+  status: draft
+  since: 0.3.0
+  title: De-duplication on every column
+  level: SHOULD
+  statement: De-duplication SHOULD name the key columns, so duplicates by key are removed and not only rows that match on every column.
+  why: A de-duplication on whole rows kept two versions of the same order because a load timestamp differed; revenue was counted twice.
+  fix: Name the key columns; if whole-row de-duplication is really meant, say so with the allow marker.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [pyspark, notebook]
+  cost_impact: low
+  dac: [DUP-03, DES-04]
+  cites: []
+  related: []

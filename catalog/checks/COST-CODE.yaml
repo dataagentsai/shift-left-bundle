@@ -367,3 +367,19 @@
   dac: [PERF-02]
   cites: []
   related: []
+- id: SL-COST-CODE-24
+  status: draft
+  since: 0.3.0
+  title: Columns added by a chain of single-column calls
+  level: SHOULD
+  statement: Code SHOULD add several columns in one call or one projection, not a chain of single-column calls.
+  why: A chain of forty single-column additions made a plan forty levels deep; analysis of the plan took longer than the job's data work.
+  fix: Add the columns together in one multi-column call or one select.
+  stage: commit
+  gate: report
+  found_by: static
+  applies_to: [pyspark, notebook]
+  cost_impact: low
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-05]

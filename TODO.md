@@ -15,7 +15,7 @@ except Tier 7 (teaching), which runs alongside.
 | 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | done 2 Nov: 8 adapters, run 1 = 34/101, 0 false alarms, hook and baseline proven |
 | 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | done 2 Nov: run 2 = 64/101, 0 false alarms |
 | 5 | The delta: purity report, empty-table plan harness, gap report | done 2 Nov: run 5 = 88/101; with our own pattern rules (SL-064) run 6 = 97/101, 0 false alarms |
-| 6 | Real repo, cut the noise, run 2 | in progress: e-commerce repo scanned, 10 noise rules (276 → 172 findings, 19 → 4 blocking, all 4 correct); sample still 97/101, 0 false alarms; Sonar gaps SL-065–069 next |
+| 6 | Real repo, cut the noise, run 2 | in progress: e-commerce repo scanned, 10 noise rules (276 → 172 findings, 19 → 4 blocking, all 4 correct); sample still 97/101, 0 false alarms; Sonar gaps: SL-065 done (spec 0.3, 136 checks, run 8 = 102/106, 0/19 false alarms), SL-066 pyright dropped after trial; SL-067–069 next |
 | 7 | Teach and release: site pages, Claude skill, v0.1 tag | alongside |
 | 8 | Azure binding | later |
 
@@ -108,8 +108,9 @@ except Tier 7 (teaching), which runs alongside.
 | SL-060 | Run on a real repo (data-platform-framework or Project5-DLTStreamingProject) | done 2 Nov: ecomsimpledataplatformusingdatabricks (13 notebooks), tests/runs/real-1-ecom.md |
 | SL-061 | Cut noise: fix or drop any rule with many false alarms | done 2 Nov: src/shiftleft/refine.py, 10 rules switched on in the binding (`refine:`), counted in run notes; 27 table-driven tests |
 | SL-062 | Feed gaps back into the spec; run 3 | partly 2 Nov: the Sonar comparison (REUSE.md) gave SL-065–069 |
-| SL-065 | PySpark rules Sonar has and we lack, as pattern rules: `lit(None)` with no cast (a NullType column breaks the write), window ordered with no explicit frame, join with no `how`, `dropDuplicates()` with no columns, chained `withColumn` that could be one `withColumns` | — |
-| SL-066 | Type-flow bugs (wrong argument count, calling a non-callable, attribute that does not exist): trial pyright in basic mode, Databricks globals declared | — |
+| SL-065 | PySpark rules Sonar has and we lack, as pattern rules: `lit(None)` with no cast (a NullType column breaks the write), window ordered with no explicit frame, join with no `how`, `dropDuplicates()` with no columns, chained `withColumn` that could be one `withColumns` | done 3 Nov: SL-CLEAN-29..32 and SL-COST-CODE-24 in patterns.py; 5 planted (P102–P106) and 3 traps (T17–T19) in src/shop/customer_report.py; run 8 = 102/106, 0/19; on the e-commerce repo only 3 report-level chain findings, all true |
+| SL-065b | Window with orderBy and no partitionBy (all rows go through one task): found reading the e-commerce repo; Sonar has no rule for it | — |
+| SL-066 | Type-flow bugs (wrong argument count, calling a non-callable, attribute that does not exist): trial pyright in basic mode, Databricks globals declared | dropped 3 Nov after trial: pyright 1.1.414 basic, 1.3 s and about 300 MB per repo; 0 real bugs on both repos; false alarms on `SparkSession.builder.getOrCreate()` (PySpark's own types), a Delta merge argument and a mixed-type list; 1 valid deprecated import. Retry on a repo with typed library code |
 | SL-067 | Duplicate code: finish the SL-CPLX-05 trial (pylint R0801 or jscpd) | — |
 | SL-068 | CI workflow security (unpinned actions, script injection in GitHub Actions): trial zizmor | — |
 | SL-069 | Taint across functions (a widget or parameter reaching SQL through a helper): extend sql-identifiers-only to follow one call level | — |

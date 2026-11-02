@@ -203,6 +203,8 @@ def _rules_python(tree, cell, rp, is_nb, is_test, cfg):
                     and "." in str(node.args[0].value):
                 add("SL-TEST-04", node, "offline-tests", f"test reads shared table {node.args[0].value!r}")
 
+    out += _rules_pyspark(tree, cell, rp, cfg)
+
     if is_test:
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("databricks.connect"):
@@ -221,6 +223,81 @@ def _rules_python(tree, cell, rp, is_nb, is_test, cfg):
             names = ", ".join(d.name for d in defs[:5])
             add("SL-CLEAN-08", defs[0], "sl-thin-notebooks",
                 f"notebook defines {len(defs)} function(s) or class(es) ({names}); move them into a module")
+    return out
+
+
+AGGREGATES = {"sum", "avg", "mean", "min", "max", "count", "countDistinct", "count_distinct", "first", "last",
+              "collect_list", "collect_set", "stddev", "stddev_samp", "stddev_pop", "variance", "var_samp", "var_pop",
+              "sum_distinct", "sumDistinct", "approx_count_distinct", "product", "max_by", "min_by", "any_value",
+              "median", "percentile_approx", "array_agg"}
+FRAME_CALLS = {"rowsBetween", "rangeBetween"}
+
+
+def _rules_pyspark(tree, cell, rp, cfg):
+    """SL-065 (from the Sonar comparison): typeless nulls, window frames, join type, whole-row dedupe, withColumn chains."""
+    out = []
+    chain_max = int(cfg.get("max_chained_withcolumn", 3))
+    parents = {c: p for p in ast.walk(tree) for c in ast.iter_child_nodes(p)}
+
+    def add(check, node, rule, msg):
+        out.append(Finding(check, rp, _line(node, cell), NAME, rule, msg))
+
+    # window specs by name; a spec built from another spec inherits its calls
+    specs = {}
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Assign) and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name) \
+                and isinstance(n.value, ast.Call):
+            ch = _attr_chain(n.value)
+            if ch and ch[0] == "Window":
+                specs[n.targets[0].id] = ch
+            elif ch and ch[0] in specs:
+                specs[n.targets[0].id] = specs[ch[0]] + ch[1:]
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        ch = _attr_chain(node)
+        last = ch[-1] if ch else ""
+        parent = parents.get(node)
+
+        # SL-CLEAN-29: lit(None) with no type, where it becomes a column
+        if last == "lit" and len(node.args) == 1 and isinstance(node.args[0], ast.Constant) and node.args[0].value is None:
+            pc = parents.get(parent)
+            as_value = isinstance(parent, ast.Call) and _attr_chain(parent)[-1:] == ["withColumn"] \
+                and len(parent.args) > 1 and parent.args[1] is node
+            as_alias = isinstance(parent, ast.Attribute) and parent.attr == "alias"
+            in_withcolumns = isinstance(parent, ast.Dict) and isinstance(pc, ast.Call) \
+                and _attr_chain(pc)[-1:] == ["withColumns"]
+            if as_value or as_alias or in_withcolumns:
+                add("SL-CLEAN-29", node, "sl-null-no-type", "null column added with no type; cast it, e.g. F.lit(None).cast('string')")
+
+        # SL-CLEAN-30: aggregate over an ordered window with no frame
+        if last == "over" and node.args and isinstance(node.func, ast.Attribute):
+            agg = _attr_chain(node.func.value)[-1:] or [""]
+            w = node.args[0]
+            spec = specs.get(w.id) if isinstance(w, ast.Name) else (_attr_chain(w) if isinstance(w, ast.Call) else None)
+            if agg[0] in AGGREGATES and spec and "orderBy" in spec and not FRAME_CALLS & set(spec):
+                add("SL-CLEAN-30", node, "sl-window-no-frame",
+                    f"{agg[0]}() over an ordered window with no frame is a running total; state rowsBetween or rangeBetween")
+
+        # SL-CLEAN-31: join type left to the default
+        if last == "join" and "path" not in ch and isinstance(node.func, ast.Attribute) \
+                and not isinstance(node.func.value, ast.Constant):
+            kws = {k.arg for k in node.keywords}
+            has_on = len(node.args) >= 2 or "on" in kws
+            if has_on and len(node.args) < 3 and "how" not in kws:
+                add("SL-CLEAN-31", node, "sl-join-no-how", "join type not stated; pass how= (inner, left, ...)")
+
+        # SL-CLEAN-32: dedupe on every column
+        if last in ("dropDuplicates", "drop_duplicates") and not node.args and not node.keywords:
+            add("SL-CLEAN-32", node, "sl-dedupe-all-columns", f"{last}() with no columns de-duplicates whole rows; name the key")
+
+        # SL-COST-CODE-24: long withColumn chain, reported once at the top of the chain
+        top = not (isinstance(parent, ast.Attribute) and parent.value is node)
+        k = ch.count("withColumn")
+        if top and k > chain_max:
+            add("SL-COST-CODE-24", node, "sl-chained-withcolumn",
+                f"{k} withColumn calls in one chain; add them in one withColumns or select (limit {chain_max})")
     return out
 
 

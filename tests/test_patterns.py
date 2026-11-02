@@ -63,11 +63,11 @@ CASES = [
     ("jupyter notebook defines a function", {"nb.ipynb": ipynb("%pip install x\n", "def a():\n    return 1\n")},
      ["SL-CLEAN-08"]),
     # ---- SL-CLEAN-14 column as attribute
-    ("join on attributes", {"m.py": "o.join(c, o.customer_id == c.customer_id)\n"}, ["SL-CLEAN-14"]),
+    ("join on attributes", {"m.py": "o.join(c, o.customer_id == c.customer_id, \"inner\")\n"}, ["SL-CLEAN-14"]),
     ("filter on attribute", {"m.py": "o.filter(o.amount > 0)\n"}, ["SL-CLEAN-14"]),
-    ("join on names", {"m.py": 'o.join(c, "customer_id")\n'}, []),
+    ("join on names", {"m.py": 'o.join(c, "customer_id", "inner")\n'}, []),
     ("F.col is fine", {"m.py": 'o.filter(F.col("amount") > 0)\n'}, []),
-    ("columns property and alias call are fine", {"m.py": 'o.select(o.columns)\no.join(c.alias("c"), "id")\n'}, []),
+    ("columns property and alias call are fine", {"m.py": 'o.select(o.columns)\no.join(c.alias("c"), "id", "left")\n'}, []),
     # ---- SL-CLEAN-23 notebook chains
     ("%run magic", {"nb.py": NB + "# MAGIC %run ./helpers\n"}, ["SL-CLEAN-23"]),
     ("dbutils.notebook.run", {"nb.py": NB + 'dbutils.notebook.run("./child", 60)\n'}, ["SL-CLEAN-23"]),
@@ -77,6 +77,35 @@ CASES = [
     ("four inline conditions", {"m.py": 'o.filter((a > 0) & (b == 1) & c.isNotNull() & (d != "x"))\n'}, ["SL-CLEAN-26"]),
     ("three inline conditions are fine", {"m.py": "o.filter((a > 0) & (b == 1) | c.isNotNull())\n"}, []),
     ("long when condition", {"m.py": 'F.when((a > 0) & (b > 0) & (c > 0) & (d > 0), 1)\n'}, ["SL-CLEAN-26"]),
+    # ---- SL-CLEAN-29 null column with no type
+    ("lit(None) as a new column", {"m.py": 'df.withColumn("x", F.lit(None))\n'}, ["SL-CLEAN-29"]),
+    ("lit(None) aliased in select", {"m.py": 'df.select("a", F.lit(None).alias("x"))\n'}, ["SL-CLEAN-29"]),
+    ("lit(None) in withColumns", {"m.py": 'df.withColumns({"x": F.lit(None)})\n'}, ["SL-CLEAN-29"]),
+    ("lit(None) cast", {"m.py": 'df.withColumn("x", F.lit(None).cast("string"))\n'}, []),
+    ("lit(None) inside when is typed by otherwise", {"m.py": 'df.withColumn("x", F.when(c, F.lit(None)).otherwise(1))\n'}, []),
+    # ---- SL-CLEAN-30 ordered window with no frame
+    ("sum over ordered window", {"m.py": 'w = Window.partitionBy("c").orderBy("d")\ndf.withColumn("t", F.sum("a").over(w))\n'},
+     ["SL-CLEAN-30"]),
+    ("inline ordered window", {"m.py": 'df.withColumn("t", F.max("a").over(Window.orderBy("d")))\n'}, ["SL-CLEAN-30"]),
+    ("frame stated", {"m.py": "w = Window.partitionBy('c').orderBy('d').rowsBetween(Window.unboundedPreceding, 0)\n"
+                              "df.withColumn('t', F.sum('a').over(w))\n"}, []),
+    ("frame added to a named spec", {"m.py": "w = Window.partitionBy('c').orderBy('d')\nw2 = w.rowsBetween(-2, 0)\n"
+                                             "df.withColumn('t', F.avg('a').over(w2))\n"}, []),
+    ("ranking needs no frame (SCD2 pattern)", {"m.py": "w = Window.partitionBy('k').orderBy(F.col('ts').desc())\n"
+                                                       "df.withColumn('rn', F.row_number().over(w))\n"}, []),
+    ("unordered window is the whole partition", {"m.py": "w = Window.partitionBy('c')\ndf.withColumn('t', F.sum('a').over(w))\n"}, []),
+    # ---- SL-CLEAN-31 join type
+    ("join with no how", {"m.py": 'o.join(c, "customer_id")\n'}, ["SL-CLEAN-31"]),
+    ("join with on= and no how", {"m.py": 'o.join(c, on="customer_id")\n'}, ["SL-CLEAN-31"]),
+    ("join with how", {"m.py": 'o.join(c, "customer_id", "left")\no.join(c, on="id", how="inner")\n'}, []),
+    ("string and path joins are not data joins", {"m.py": '", ".join(names)\nos.path.join(a, b)\n'}, []),
+    # ---- SL-CLEAN-32 whole-row dedupe
+    ("dropDuplicates with no columns", {"m.py": "df.dropDuplicates()\n"}, ["SL-CLEAN-32"]),
+    ("dropDuplicates on a key", {"m.py": 'df.dropDuplicates(["order_id"])\ndf.dropDuplicates(subset=["k"])\n'}, []),
+    # ---- SL-COST-CODE-24 withColumn chain
+    ("four chained withColumn (one finding)", {"m.py": "df.withColumn('a', x).withColumn('b', x).withColumn('c', x).withColumn('d', x)\n"},
+     ["SL-COST-CODE-24"]),
+    ("three chained withColumn", {"m.py": "df.withColumn('a', x).withColumn('b', x).withColumn('c', x)\n"}, []),
     # ---- SL-DEP-05 runtime match
     ("pyspark not pinned to the runtime", {"resources/j.yml": "spark_version: 15.4.x-scala2.12\n", "requirements.txt": "pyspark>=3\n"},
      ["SL-DEP-05"]),
@@ -101,6 +130,7 @@ def test_pattern_rules(tmp_path, name, tree, expected):
 
 def test_every_rule_maps_to_a_catalog_check():
     for check in ("SL-SEC-06", "SL-SEC-07", "SL-TEST-04", "SL-TEST-06", "SL-CLEAN-08", "SL-CLEAN-14", "SL-CLEAN-23",
-                  "SL-CLEAN-26", "SL-DEP-05"):
+                  "SL-CLEAN-26", "SL-DEP-05", "SL-CLEAN-29", "SL-CLEAN-30", "SL-CLEAN-31", "SL-CLEAN-32",
+                  "SL-COST-CODE-24"):
         assert check in CHECKS
         assert BINDING["checks"][check]["tool"] == "patterns"
