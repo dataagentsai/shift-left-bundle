@@ -4,12 +4,13 @@ Fail fast on PySpark, Python and Databricks SQL code before it runs: cost, secur
 
 Guide: <https://cleandataengineering.ai/learn/shift-left/>
 
-**Status:** the spec (v0.1) is written: 90 checks. No runner yet; next is a sample repo with planted problems to measure catch rates. See `TODO.md`.
+**Status:** the spec (0.2) is written: 131 checks in 13 families, for Python, PySpark, notebooks, SQL, dbt, materialized views and metric views. `examples/scd2` shows SCD2, idempotency, duplicates, dropped records and cartesian joins tested offline. No runner yet; next is a sample repo with planted problems to measure catch rates. See `TODO.md`.
 
 ## Layout
 
 ```
-core/families.yaml      the 12 check families
+core/families.yaml      the 13 check families
+core/artifacts.yaml     what a check reads (applies_to)
 core/stages.yaml        commit, pull request, nightly, pre-deploy
 core/gates.yaml         block / warn / report, baseline, thresholds (coverage, complexity, mutation)
 core/purity.yaml        what makes a function pure, impure or unknown (categories, no product names)
@@ -18,8 +19,10 @@ core/dac_ids.yaml       Data Assurance Catalog ids a check may link to (copied, 
 catalog/checks/*.yaml   the checks, one file per family     ← the spec; edit here
 catalog/INDEX.md        generated list of every check with its binding
 bindings/databricks.yaml  check → tool + rule + status; purity categories → concrete PySpark calls
-scripts/lint.py         spec rules R1–R10
+scripts/lint.py         spec rules R1–R12
 tests/                  table-driven tests
+examples/scd2/          pure SCD2 + test kit + table-driven tests, runs on local Spark
+templates/              pre-commit, dev container, GitHub Actions, Azure DevOps (not yet run)
 ```
 
 ## Commands
@@ -27,7 +30,7 @@ tests/                  table-driven tests
 ```
 uv run scripts/lint.py                               # check the catalog and bindings
 uv run scripts/index.py                              # rebuild catalog/INDEX.md
-uv run --with pytest --with pyyaml pytest -q         # tests
+uv run --with pytest --with pyyaml pytest -q tests   # spec tests (examples/scd2 has its own, needs pyspark)
 uv run scripts/sync_dac_ids.py ../data-platform-catalog   # refresh DAC ids
 ```
 

@@ -11,6 +11,7 @@
   stage: pr
   gate: block
   found_by: plan
+  applies_to: [pyspark, sql, notebook]
   cost_impact: high
   dac: [COST-02]
   cites: []
@@ -26,6 +27,7 @@
   stage: pr
   gate: warn
   found_by: plan
+  applies_to: [pyspark, sql, notebook]
   cost_impact: high
   dac: [COST-02]
   cites: []
@@ -41,6 +43,7 @@
   stage: pr
   gate: warn
   found_by: plan
+  applies_to: [pyspark, sql, notebook]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -56,6 +59,7 @@
   stage: pr
   gate: warn
   found_by: plan
+  applies_to: [pyspark, sql, notebook]
   cost_impact: high
   dac: [PERF-05]
   cites: []
@@ -71,6 +75,7 @@
   stage: pr
   gate: warn
   found_by: plan
+  applies_to: [pyspark, sql, notebook]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -86,6 +91,7 @@
   stage: pr
   gate: warn
   found_by: plan
+  applies_to: [pyspark, sql, notebook]
   cost_impact: medium
   dac: [COST-02]
   cites: []

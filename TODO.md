@@ -10,6 +10,7 @@ except Tier 7 (teaching), which runs alongside.
 |---|---|---|
 | 0 | Ground: reuse check, decisions, plan, public repo, site guide | done 2 Nov |
 | 1 | Spec v0.1: the checks, written once, no product names | done 2 Nov: 90 checks, linter clean, 41 tests |
+| 1b | Spec 0.2: notebooks, dbt, materialized views, metric views (new SEM family), 20 more clean-code habits, Ruff profiles (404 / 600 rules), osv-scanner; SCD2 example with test kit; CI and container templates | done 2 Nov: 131 checks, 51 lint tests, example 27 tests |
 | 2 | Proof material: sample repo with planted problems and a hidden answer key | next |
 | 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | later |
 | 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | later |
@@ -39,6 +40,18 @@ except Tier 7 (teaching), which runs alongside.
 | SL-014 | Gate policy as data: what blocks at start, baseline file format, changed-lines coverage at 80% | done 2 Nov |
 | SL-015 | Databricks binding v0: check id → tool + rule id + config | done 2 Nov |
 | SL-016 | Catalog linter (required fields, no product names outside bindings, ids unique, DAC links resolve) + table-driven tests | done 2 Nov |
+
+## Tier 1b: spec 0.2 (2 Nov)
+
+| Id | Task | Status |
+|---|---|---|
+| SL-017 | `applies_to` on every check (python, pyspark, notebook, sql, dbt, metric-view, materialized-view, bundle-config, iac, repo) | done 2 Nov |
+| SL-018 | SEM family: metric definitions (parse, aggregate, ratio, fan-out, one definition, descriptions, known-answer tests) | done 2 Nov |
+| SL-019 | Clean code to 37 habits; Ruff starter (404 rules) and strict (600) profiles; ruff_map to check ids; lint rule R12 | done 2 Nov |
+| SL-024 | Notebooks (outputs, %run chains, %pip), dbt (tests, references, layers, descriptions), materialized views (incremental refresh, chains) | done 2 Nov |
+| SL-025 | osv-scanner as main vulnerability tool; Scorecard report-only | done 2 Nov |
+| SL-026 | examples/scd2: pure SCD2, test kit (idempotent, unique, nothing dropped, no fan-out, no cartesian), planted-bug tests | done 2 Nov: 27 passed on Spark 3.5.1 |
+| SL-027 | templates: pre-commit, dev container, GitHub Actions, Azure DevOps | written, not yet run (SL-072) |
 
 ## Tier 2: proof material
 
@@ -79,6 +92,8 @@ except Tier 7 (teaching), which runs alongside.
 | SL-053 | Gap report: repo-review plugins for data repos + sp-repo-review + OpenSSF Scorecard + per-function gaps | — |
 | SL-054 | Joined view: complex-and-untested, pure-but-untested | — |
 | SL-055 | Run 2 on the sample with the delta; record the score | — |
+| SL-056 | Draft tests for untested pure functions: snapshot tests (syrupy) from small dev samples, Hypothesis ghostwriter skeletons with schema-to-strategy helper, Claude-drafted case tables; keep a drafted test only if mutation testing shows it catches bugs. Pynguin on trial | — |
+| SL-057 | Test kit from examples/scd2 into the package: idempotency, uniqueness, nothing dropped, fan-out, cartesian; case tables for SCD2, dedupe, incremental, late data | — |
 
 ## Tier 6: real repo
 
@@ -94,7 +109,7 @@ except Tier 7 (teaching), which runs alongside.
 |---|---|---|
 | SL-070 | Keep /learn/shift-left/ in step with each tier (status, real scores) | ongoing |
 | SL-071 | Claude skill: reads REVIEW.md, explains findings, drafts refactors of impure functions (never decides pass or fail) | — |
-| SL-072 | CI templates: GitHub Actions reusable workflow, Azure DevOps template | — |
+| SL-072 | Run and fix the templates (pre-commit, dev container, GitHub Actions, Azure DevOps) on the sample repo | — |
 | SL-073 | Tag v0.1; README quick start | — |
 
 ## Tier 8: Azure binding
@@ -109,6 +124,9 @@ except Tier 7 (teaching), which runs alongside.
 - `pyspark.testing` in Spark 3.5 needs pandas and pyarrow (and numpy < 2 with older pandas). The sample repo and templates must list them.
 - Set `PYSPARK_PYTHON` to the test's Python in the test fixture, or workers fail with a version mismatch.
 - Empty-table EXPLAIN of a keyless join shows `CartesianProduct` (checked on Spark 3.5.1).
+
+- `df.limit(0)` or an empty local list lets Spark fold an empty join away and hide a cartesian product; build empty inputs from an empty RDD (`testkit.schema_only`).
+- Set `PYSPARK_PYTHON` unconditionally in the test fixture; this machine's shell sets it to Python 3.11.
 
 ## Open questions
 

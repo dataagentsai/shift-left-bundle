@@ -82,3 +82,25 @@ Existence check done 2 Nov 2026, before any design. Rule: reuse what the industr
 7. **Spark-aware purity report**: for every function, pure or impure and why (reads a table, writes, uses `dbutils`, global `spark`, `datetime.now`, env vars, random). Shows counts, a refactor hint for each impure function that could be pure ("take the DataFrame in, return a DataFrame, move the read to the caller"), and joins with coverage and complexity to list "pure but untested" and "complex and untested".
 8. **Gap report ("what is missing")**: repo-review plugins for data repos (no tests folder, no pre-commit, no lockfile, no CI, no coverage threshold, no SQL lint, no bundle validation, no contract files) plus Scorecard plus the per-function gaps above, combined into one REVIEW.md.
 9. **Planted-problem sample repo + answer key**, to measure catch rate and false alarms (same method as data-project-review).
+
+## Added 2 Nov 2026 (Tier 1b): notebooks, dbt, materialized views, metric views, security, test drafting
+
+| Tool | What it does | Licence / health | Verdict | Reason |
+|---|---|---|---|---|
+| osv-scanner | Known vulnerabilities from lockfiles, OSV database | Apache-2.0 | **Pursue (main)** | Same database OpenSSF Scorecard uses; many ecosystems. pip-audit stays as the fallback. |
+| OpenSSF Scorecard | Repo security practices | Apache-2.0 | **Pursue (report only)** | Scores practices; does not read code, can't block a single change, GitHub-first (no Azure DevOps). Not sufficient alone. |
+| OpenSSF Allstar | Enforces repo settings on GitHub | Apache-2.0 | **Optional** | Keeps branch protection on instead of only scoring it. |
+| nbQA | Run linters on notebooks | MIT, last release Nov 2024 | **Drop** | Ruff lints .ipynb natively. |
+| nbstripout | Strip notebook outputs on commit | MIT, 0.9.1 Feb 2026 | **Pursue** | Outputs leak data samples (SL-SEC-09). |
+| dbt-bouncer | Rules over manifest.json from `dbt parse` (offline) | MIT, 4.5.1 Oct 2026 | **Pursue** | Model tests, references, conventions. Check names confirmed in Tier 3. |
+| dbt-score | Scores dbt model metadata (offline) | MIT, 0.19.0 Oct 2026 | **Pursue** | Descriptions and metadata. |
+| sqlfluff-templater-dbt | Lint dbt models with Jinja rendered | MIT, 4.5.0 Oct 2026 | **Pursue** | Calls `dbt compile`, which may need a connection; SQLFluff's jinja templater is the offline fallback. |
+| dbt-project-evaluator | dbt Labs DAG rules | Apache-2.0 | **Trial** | 1.x builds models in the warehouse (not offline). A 2.x running as native `dbt check` is reported for dbt 2; not confirmed. |
+| EXPLAIN CREATE MATERIALIZED VIEW | Databricks says if an MV can refresh incrementally, and why not | Databricks SQL, Runtime 17.3+ | **Pursue (pre-deploy)** | Not offline (a few seconds on a dev warehouse), but the only authority. Docs pages disagree on non-deterministic functions. |
+| Metric view validator | — | — | **Build** | No outside linter exists; Databricks validates YAML spec 1.1 only inside its own tools. |
+| Palantir PySpark style guide | Written guide | — | **Borrow** | Source for SL-CLEAN-14, -25, -26. |
+| syrupy | Snapshot (characterisation) tests for pytest | MIT, 6.1.1 Sep 2026 | **Pursue** | Fastest way to pin an untested pure function's current behaviour before refactoring. |
+| Hypothesis ghostwriter | Writes property-test skeletons from function signatures | MPL-2.0 | **Pursue** | Part of Hypothesis; DataFrame inputs need our schema-to-strategy helper. |
+| Pynguin | Automated unit-test generation for Python | MIT, 0.48.0 Oct 2026 | **Trial** | Research tool; expect weak results on DataFrame code. |
+
+Ruff 0.17.3 has 973 rules (832 stable) from 60 linters. Starter profile 404 rules, strict 600 (bindings/databricks.yaml).

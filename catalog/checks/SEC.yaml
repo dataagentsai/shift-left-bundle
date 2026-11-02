@@ -10,6 +10,7 @@
   stage: commit
   gate: block
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [SEC-02]
   cites:
@@ -29,6 +30,7 @@
   stage: commit
   gate: block
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [SEC-02]
   cites:
@@ -46,6 +48,7 @@
   stage: commit
   gate: block
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [SEC-02]
   cites:
@@ -65,6 +68,7 @@
   stage: commit
   gate: block
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [SEC-02]
   cites:
@@ -84,6 +88,7 @@
   stage: commit
   gate: block
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [SEC-02]
   cites:
@@ -101,6 +106,7 @@
   stage: commit
   gate: block
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-05]
   cites:
@@ -120,6 +126,7 @@
   stage: commit
   gate: report
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: null
   dac: [SEC-01]
   cites:
@@ -137,7 +144,42 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [sql, notebook, dbt]
   cost_impact: null
   dac: [SEC-02, ENV-02]
+  cites: []
+  related: []
+- id: SL-SEC-09
+  status: draft
+  since: 0.2.0
+  title: Notebook outputs committed
+  level: MUST
+  statement: Notebooks MUST be committed without cell outputs, because outputs can hold data samples, personal data or secrets.
+  why: A notebook was committed with its output cells, including 50 customer rows with emails and phone numbers.
+  fix: Strip outputs automatically on commit.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [notebook]
+  cost_impact: null
+  dac: [SEC-01]
+  cites:
+  - standard: CWE
+    ref: CWE-532
+  related: [SL-SEC-07]
+- id: SL-SEC-10
+  status: draft
+  since: 0.2.0
+  title: Other known-unsafe calls
+  level: SHOULD
+  statement: Code SHOULD NOT use calls on the security rule set's known-unsafe list that the checks above don't name, such as weak hashes for security, predictable temporary files, or binding a service to every network interface.
+  why: A file-integrity check used a weak hash; two different files could be made to look identical.
+  fix: Use the safe alternative the rule names.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark, notebook]
+  cost_impact: null
+  dac: [SEC-02]
   cites: []
   related: []

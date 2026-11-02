@@ -10,6 +10,7 @@
   stage: nightly
   gate: report
   found_by: repo
+  applies_to: [repo]
   cost_impact: null
   dac: [REL-02]
   cites: []
@@ -25,6 +26,7 @@
   stage: nightly
   gate: report
   found_by: repo
+  applies_to: [repo]
   cost_impact: null
   dac: [TEST-03]
   cites:
@@ -42,6 +44,7 @@
   stage: nightly
   gate: report
   found_by: repo
+  applies_to: [repo]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -57,6 +60,7 @@
   stage: nightly
   gate: report
   found_by: repo
+  applies_to: [repo]
   cost_impact: null
   dac: [REL-05]
   cites: []
@@ -72,6 +76,7 @@
   stage: nightly
   gate: report
   found_by: repo
+  applies_to: [repo]
   cost_impact: null
   dac: [REL-02]
   cites:
@@ -89,6 +94,7 @@
   stage: nightly
   gate: report
   found_by: repo
+  applies_to: [repo]
   cost_impact: null
   dac: [REL-06, CFG-01]
   cites: []
@@ -104,6 +110,7 @@
   stage: nightly
   gate: report
   found_by: repo
+  applies_to: [repo]
   cost_impact: null
   dac: [REL-02]
   cites: []
@@ -119,6 +126,7 @@
   stage: nightly
   gate: report
   found_by: repo
+  applies_to: [repo]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -134,9 +142,26 @@
   stage: nightly
   gate: report
   found_by: repo
+  applies_to: [repo]
   cost_impact: null
   dac: [REL-01, REL-02]
   cites:
   - standard: OPENSSF-SCORECARD
     ref: aggregate score
   related: []
+- id: SL-SETUP-10
+  status: draft
+  since: 0.2.0
+  title: Models and sources without descriptions
+  level: SHOULD
+  statement: Models, sources and their key columns SHOULD have descriptions, so people and assistants can tell what each one means.
+  why: Two models named orders_final and orders_clean existed; nobody could say which one the finance report should use.
+  fix: Add descriptions in the properties files, starting with the most-used models.
+  stage: nightly
+  gate: report
+  found_by: static
+  applies_to: [dbt]
+  cost_impact: null
+  dac: []
+  cites: []
+  related: [SL-SEM-06]

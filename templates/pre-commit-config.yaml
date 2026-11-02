@@ -1,0 +1,21 @@
+# Commit-time checks (< 10 s, changed files only). Copy to .pre-commit-config.yaml. Versions: pin and update on purpose.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.3
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 4.5.0
+    hooks:
+      - id: sqlfluff-lint
+        args: [--dialect, databricks]
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.0          # check the latest tag before use
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
+    hooks:
+      - id: nbstripout

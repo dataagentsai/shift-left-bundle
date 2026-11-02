@@ -1,0 +1,17 @@
+# Pull-request checks (< 5 min). Not yet run (2 Nov 2026); Tier 7 task SL-072 verifies it.
+name: shift-left
+on: [pull_request]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }                    # diff-cover needs the base branch
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements-test.txt pre-commit diff-cover
+      - run: pre-commit run --from-ref origin/${{ github.base_ref }} --to-ref HEAD
+      - run: pytest -q --cov --cov-branch --cov-report=xml
+      - run: diff-cover coverage.xml --compare-branch=origin/${{ github.base_ref }} --fail-under=80

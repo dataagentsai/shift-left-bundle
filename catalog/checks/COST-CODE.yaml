@@ -10,6 +10,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: high
   dac: [COST-02]
   cites: []
@@ -25,6 +26,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: high
   dac: [COST-02]
   cites: []
@@ -40,6 +42,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: high
   dac: [COST-02]
   cites: []
@@ -55,6 +58,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -70,6 +74,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -85,6 +90,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: medium
   dac: [COST-04]
   cites: []
@@ -100,6 +106,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: low
   dac: [COST-02]
   cites: []
@@ -115,6 +122,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -130,6 +138,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: medium
   dac: [PERF-05]
   cites: []
@@ -145,6 +154,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: high
   dac: [COST-02]
   cites: []
@@ -160,6 +170,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -175,6 +186,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [pyspark, notebook]
   cost_impact: medium
   dac: [SCH-01]
   cites: []
@@ -190,6 +202,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [sql, notebook, dbt, materialized-view]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -205,6 +218,7 @@
   stage: commit
   gate: block
   found_by: static
+  applies_to: [sql, notebook, dbt, materialized-view]
   cost_impact: high
   dac: [COST-02]
   cites: []
@@ -220,6 +234,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [sql, notebook, dbt, materialized-view]
   cost_impact: high
   dac: [PERF-05]
   cites: []
@@ -235,6 +250,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [sql, notebook, dbt, materialized-view]
   cost_impact: high
   dac: [COST-02, PERF-05]
   cites: []
@@ -250,6 +266,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [sql, notebook, dbt, materialized-view]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -265,6 +282,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [sql, notebook, dbt, materialized-view]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -280,6 +298,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [sql, notebook, dbt, materialized-view]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -295,6 +314,7 @@
   stage: commit
   gate: block
   found_by: static
+  applies_to: [sql, notebook, dbt, materialized-view]
   cost_impact: high
   dac: [REL-07]
   cites: []
@@ -310,7 +330,40 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [sql, pyspark, notebook, dbt, materialized-view]
   cost_impact: low
   dac: [TEST-05]
   cites: []
   related: [SL-PURE-03]
+- id: SL-COST-CODE-22
+  status: draft
+  since: 0.2.0
+  title: Materialized view query blocks incremental refresh
+  level: SHOULD
+  statement: The query of a materialized view SHOULD avoid constructs that force a full recompute on every refresh, such as random functions or other non-repeatable functions outside the time filters the platform allows.
+  why: A random sample in a materialized view's query made every hourly refresh recompute two years of data.
+  fix: Remove the non-repeatable function, or move it to the query that reads the view.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [materialized-view, sql]
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CONFIG-09, SL-COST-CODE-21]
+- id: SL-COST-CODE-23
+  status: draft
+  since: 0.2.0
+  title: Long chains of materialized views
+  level: SHOULD
+  statement: Materialized views SHOULD NOT be stacked deeper than the limit in core/gates.yaml, because each level adds a refresh and a delay.
+  why: Five materialized views built on each other refreshed in sequence; the top one was always 40 minutes behind its source.
+  fix: Flatten the chain, or turn intermediate levels into plain views or tables.
+  stage: pr
+  gate: report
+  found_by: static
+  applies_to: [materialized-view]
+  cost_impact: medium
+  dac: [PERF-02]
+  cites: []
+  related: []

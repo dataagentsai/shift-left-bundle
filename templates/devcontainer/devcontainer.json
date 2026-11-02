@@ -1,0 +1,6 @@
+{
+  "name": "shift-left (offline PySpark tests)",
+  "build": { "dockerfile": "Dockerfile", "context": "../.." },
+  "postCreateCommand": "pip install pre-commit && pre-commit install",
+  "customizations": { "vscode": { "extensions": ["ms-python.python", "charliermarsh.ruff"] } }
+}

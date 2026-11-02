@@ -10,6 +10,7 @@
   stage: predeploy
   gate: block
   found_by: static
+  applies_to: [bundle-config]
   cost_impact: high
   dac: [COST-04]
   cites: []
@@ -25,6 +26,7 @@
   stage: predeploy
   gate: block
   found_by: static
+  applies_to: [bundle-config]
   cost_impact: high
   dac: [COST-02, COST-04]
   cites: []
@@ -40,6 +42,7 @@
   stage: predeploy
   gate: block
   found_by: static
+  applies_to: [bundle-config]
   cost_impact: medium
   dac: [COST-03]
   cites: []
@@ -55,6 +58,7 @@
   stage: predeploy
   gate: block
   found_by: static
+  applies_to: [bundle-config]
   cost_impact: high
   dac: [COST-02]
   cites: []
@@ -70,6 +74,7 @@
   stage: predeploy
   gate: warn
   found_by: static
+  applies_to: [bundle-config]
   cost_impact: high
   dac: [COST-04, PERF-02]
   cites: []
@@ -85,6 +90,7 @@
   stage: predeploy
   gate: warn
   found_by: static
+  applies_to: [bundle-config, materialized-view, metric-view]
   cost_impact: medium
   dac: [COST-04, PERF-02]
   cites: []
@@ -100,6 +106,7 @@
   stage: predeploy
   gate: warn
   found_by: static
+  applies_to: [bundle-config]
   cost_impact: medium
   dac: [COST-02, ENV-01]
   cites: []
@@ -115,7 +122,40 @@
   stage: predeploy
   gate: warn
   found_by: static
+  applies_to: [bundle-config]
   cost_impact: medium
   dac: [COST-02]
   cites: []
   related: []
+- id: SL-COST-CONFIG-09
+  status: draft
+  since: 0.2.0
+  title: Materialized view can't refresh incrementally
+  level: SHOULD
+  statement: A materialized view over a large source SHOULD be confirmed, before deploy, to be eligible for incremental refresh, or its full recompute SHOULD be recorded as intended.
+  why: A view was assumed to refresh incrementally; a source format it could not track made every refresh a full recompute for months.
+  fix: Ask the platform whether the view can refresh incrementally before deploying, and fix the reason it gives.
+  stage: predeploy
+  gate: warn
+  found_by: static
+  applies_to: [materialized-view]
+  cost_impact: high
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CODE-22, SL-COST-CONFIG-10]
+- id: SL-COST-CONFIG-10
+  status: draft
+  since: 0.2.0
+  title: Development views allowed to fall back to full recompute silently
+  level: SHOULD
+  statement: In development, materialized views meant to refresh incrementally SHOULD use the strict refresh policy, so a view that can't refresh incrementally fails at creation instead of recomputing in silence.
+  why: The fallback to full recompute was only found in production, when the bill arrived.
+  fix: Set the strict incremental policy in the development target.
+  stage: predeploy
+  gate: report
+  found_by: static
+  applies_to: [materialized-view, bundle-config]
+  cost_impact: medium
+  dac: [COST-02]
+  cites: []
+  related: [SL-COST-CONFIG-09]

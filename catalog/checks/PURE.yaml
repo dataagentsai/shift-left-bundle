@@ -11,6 +11,7 @@
   stage: pr
   gate: report
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -26,6 +27,7 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -41,6 +43,7 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [TEST-03, TEST-05]
   cites: []
@@ -56,6 +59,7 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -71,6 +75,7 @@
   stage: pr
   gate: block
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -86,6 +91,7 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: medium
   dac: [COST-02]
   cites: []
@@ -101,6 +107,7 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [TEST-03]
   cites: []

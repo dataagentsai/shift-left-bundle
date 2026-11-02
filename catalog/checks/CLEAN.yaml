@@ -10,6 +10,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-02]
   cites: []
@@ -25,6 +26,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-02]
   cites: []
@@ -40,6 +42,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-02]
   cites: []
@@ -55,6 +58,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [GATE-01]
   cites: []
@@ -70,6 +74,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-02]
   cites: []
@@ -85,6 +90,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-02]
   cites: []
@@ -100,6 +106,7 @@
   stage: commit
   gate: report
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-04]
   cites: []
@@ -115,7 +122,328 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [notebook]
   cost_impact: null
   dac: [TEST-03]
   cites: []
   related: [SL-PURE-02, SL-TEST-03]
+- id: SL-CLEAN-09
+  status: draft
+  since: 0.2.0
+  title: Public function without type hints
+  level: SHOULD
+  statement: Public functions SHOULD declare the types of their arguments and return value.
+  why: A transform documented as taking a table name was called with a dataset in one job and a name in another; nothing caught it until run time.
+  fix: Add type hints; a type checker can then catch the wrong call.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-10
+  status: draft
+  since: 0.2.0
+  title: Public function without a docstring
+  level: SHOULD
+  statement: Public functions and modules SHOULD have a short docstring that says what they do and what they expect.
+  why: A shared helper's rounding rule was only discoverable by reading its code, so two teams used it for different purposes.
+  fix: Add one or two lines saying what goes in, what comes out, and any rule worth knowing.
+  stage: commit
+  gate: report
+  found_by: static
+  applies_to: [python, pyspark]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-11
+  status: draft
+  since: 0.2.0
+  title: True/false flag argument that switches behaviour
+  level: SHOULD
+  statement: A function SHOULD NOT take a true/false argument that switches between two different behaviours; it SHOULD be two functions or take a named option.
+  why: A call read load(df, True, False); nobody could tell which flag meant "full reload" without opening the function.
+  fix: Split into two functions, or use a keyword-only argument with a clear name.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: [SL-CLEAN-02]
+- id: SL-CLEAN-12
+  status: draft
+  since: 0.2.0
+  title: A simpler or more modern form is available
+  level: SHOULD
+  statement: Code SHOULD use the simpler equivalent form when one exists, such as a comprehension, any() or all(), a context manager, or newer language syntax.
+  why: Hand-written loops that built lists and flags made a 20-line function out of what reads as 4 lines in the simpler form.
+  fix: Apply the automatic fix, then read the result.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark, notebook]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-13
+  status: draft
+  since: 0.2.0
+  title: Function returns a value on some paths and nothing on others
+  level: SHOULD
+  statement: A function that returns a value SHOULD return one on every path, explicitly.
+  why: A lookup returned a rate on the found path and fell off the end otherwise; a missing rate became a silent empty value in the output.
+  fix: Return explicitly on every path, or raise when there is no valid answer.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark, notebook]
+  cost_impact: null
+  dac: [GATE-01]
+  cites: []
+  related: []
+- id: SL-CLEAN-14
+  status: draft
+  since: 0.2.0
+  title: Column referenced as an attribute of the dataset
+  level: SHOULD
+  statement: Data-frame code SHOULD refer to columns by name through the column function, not as attributes of a dataset variable, so a transform does not depend on which variable it came from.
+  why: A transform referred to orders.amount; after a refactor renamed the variable, the reference pointed at the wrong dataset and the join returned the wrong amounts.
+  fix: Refer to the column by name.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [pyspark, notebook]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: [SL-CLEAN-25]
+- id: SL-CLEAN-15
+  status: draft
+  since: 0.2.0
+  title: Wildcard import that hides built-in names
+  level: MUST
+  statement: Code MUST NOT import everything from a module with a wildcard, and MUST NOT shadow built-in names such as sum, max, min or filter.
+  why: A wildcard import of the engine's column functions replaced the built-in sum; a later line meant to add up a local list called the column function and failed in production.
+  fix: Import the module under a short alias and call functions through it.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark, notebook]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-16
+  status: draft
+  since: 0.2.0
+  title: Date and time values without a time zone
+  level: SHOULD
+  statement: Code SHOULD create and compare date-time values with an explicit time zone.
+  why: A job built its run window from local machine time; when it moved to a cluster on UTC, every daily load shifted by five and a half hours.
+  fix: Use time-zone-aware values, and pass the run date in.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark, notebook]
+  cost_impact: null
+  dac: [LATE-01]
+  cites: []
+  related: [SL-PURE-03]
+- id: SL-CLEAN-17
+  status: draft
+  since: 0.2.0
+  title: Print statements instead of logging, or logging used badly
+  level: SHOULD
+  statement: Production code SHOULD log through the logging library with levels, and SHOULD NOT build log messages eagerly or use print.
+  why: Prints went to a driver log nobody kept; when a job failed, the only clue had already been lost.
+  fix: Use a module logger with levels; pass values as arguments to the log call.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: [SL-SEC-06, SL-SEC-07]
+- id: SL-CLEAN-18
+  status: draft
+  since: 0.2.0
+  title: File paths handled as plain strings
+  level: MAY
+  statement: Code MAY use path objects instead of joining strings to build file paths.
+  why: A path built by string joining lost a separator on one platform and wrote files to the parent folder.
+  fix: Use path objects.
+  stage: commit
+  gate: report
+  found_by: static
+  applies_to: [python]
+  cost_impact: null
+  dac: []
+  cites: []
+  related: []
+- id: SL-CLEAN-19
+  status: draft
+  since: 0.2.0
+  title: Vague errors, or errors that lose their cause
+  level: SHOULD
+  statement: Code SHOULD raise specific errors with a clear message, and SHOULD keep the original error as the cause when it re-raises.
+  why: A loader caught a parsing error and raised "load failed"; the file name and line that caused it were lost.
+  fix: Raise a specific error with the context, chained to the original.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark]
+  cost_impact: null
+  dac: [GATE-01]
+  cites: []
+  related: [SL-CLEAN-04]
+- id: SL-CLEAN-20
+  status: draft
+  since: 0.2.0
+  title: Likely bugs
+  level: MUST
+  statement: Code MUST NOT contain patterns that are almost always mistakes, such as comparing to itself, a loop variable used after the loop by a closure, or an assertion on a tuple.
+  why: A late-bound loop variable in a list of functions made every function use the last value; all twelve monthly partitions were written as December.
+  fix: Fix the pattern the rule names.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark, notebook]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-21
+  status: draft
+  since: 0.2.0
+  title: Test code habits
+  level: SHOULD
+  statement: Test code SHOULD follow the test framework's habits, such as table-driven cases, fixtures for shared setup, and plain assertions.
+  why: Copied test functions differing in one value drifted apart; a fix to one case never reached the eleven copies.
+  fix: Turn copies into one table of cases.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark]
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-TEST-06]
+- id: SL-CLEAN-22
+  status: draft
+  since: 0.2.0
+  title: Local data-frame and array misuse
+  level: SHOULD
+  statement: Code that uses local data frames and arrays SHOULD avoid their known traps, such as chained assignment, in-place changes and deprecated calls.
+  why: An in-place change on a local copy of query results changed the original too, so a later step saw edited data.
+  fix: Follow the rule's suggested form.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark, notebook]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: []
+- id: SL-CLEAN-23
+  status: draft
+  since: 0.2.0
+  title: Notebooks chained by running other notebooks
+  level: SHOULD
+  statement: Notebooks SHOULD import shared code from modules instead of running other notebooks to pull in their definitions.
+  why: A chain of four notebooks that ran each other defined the same helper twice; which one won depended on the order, and tests could not import any of it.
+  fix: Move shared code into a module and import it.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [notebook]
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-CLEAN-08]
+- id: SL-CLEAN-24
+  status: draft
+  since: 0.2.0
+  title: To-do notes left without an owner or ticket
+  level: MAY
+  statement: To-do and fix-me notes MAY stay in code only with an owner or a ticket reference.
+  why: A "TODO handle nulls" note sat in a join for two years until nulls arrived.
+  fix: Add the ticket, fix it, or delete the note.
+  stage: pr
+  gate: report
+  found_by: static
+  applies_to: [python, pyspark, notebook, sql]
+  cost_impact: null
+  dac: []
+  cites: []
+  related: []
+- id: SL-CLEAN-25
+  status: draft
+  since: 0.2.0
+  title: Very long chains of data-frame calls
+  level: SHOULD
+  statement: Data-frame code SHOULD break long chains of calls into named steps, keeping each chain to the length set in core/gates.yaml.
+  why: A 30-call chain mixed filters, joins and renames; a reviewer could not see that a filter had moved after a join.
+  fix: Break the chain into named intermediate steps or small functions.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [pyspark, notebook]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: [SL-CLEAN-14, SL-CLEAN-26]
+- id: SL-CLEAN-26
+  status: draft
+  since: 0.2.0
+  title: Complex conditions written inline
+  level: SHOULD
+  statement: Complex filter and when-conditions SHOULD be given a name as a variable or function instead of being written inline.
+  why: An inline condition with six clauses was copied into three places with one clause missing in one.
+  fix: Name the condition once (for example is_valid_order) and reuse it.
+  stage: commit
+  gate: report
+  found_by: static
+  applies_to: [pyspark, notebook]
+  cost_impact: null
+  dac: [REL-02]
+  cites: []
+  related: [SL-CPLX-05]
+- id: SL-CLEAN-27
+  status: draft
+  since: 0.2.0
+  title: Model reads a table directly instead of a declared source or model
+  level: SHOULD
+  statement: Models in a transformation project SHOULD read only declared sources or other models, never a table named directly.
+  why: A model read a raw table by name; the lineage graph did not show it, so a source change broke the model without warning.
+  fix: Declare the table as a source and reference it.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [dbt]
+  cost_impact: null
+  dac: [LIN-01]
+  cites: []
+  related: [SL-CLEAN-28]
+- id: SL-CLEAN-28
+  status: draft
+  since: 0.2.0
+  title: Model layers skipped or mixed
+  level: SHOULD
+  statement: Models SHOULD follow the project's layers, so that only staging models read sources and later layers read earlier ones.
+  why: A reporting model joined two raw sources directly; when the staging layer fixed a data issue, the report kept the old error.
+  fix: Route the model through the staging layer.
+  stage: pr
+  gate: report
+  found_by: static
+  applies_to: [dbt]
+  cost_impact: null
+  dac: [LIN-01]
+  cites: []
+  related: [SL-CLEAN-27]

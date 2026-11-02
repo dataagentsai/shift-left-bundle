@@ -10,6 +10,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-02]
   cites:
@@ -27,6 +28,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-02]
   cites: []
@@ -42,6 +44,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [sql, notebook, dbt]
   cost_impact: null
   dac: [REL-02]
   cites: []
@@ -57,6 +60,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: [REL-02]
   cites:

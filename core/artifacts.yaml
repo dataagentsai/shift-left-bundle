@@ -1,0 +1,11 @@
+# What a check reads (its `applies_to`). Product-neutral names; bindings say which files each means on a platform.
+python: Python modules and scripts
+pyspark: Python code that uses a distributed data-frame engine
+notebook: Notebooks, in either saved format, including their query cells and install commands
+sql: Query text in .sql files, query cells, and query strings inside Python
+dbt: Models, sources, tests and metric definitions in a SQL transformation project
+metric-view: Governed metric definitions (a semantic layer), with measures, dimensions and joins
+materialized-view: Views whose results are stored and refreshed by the platform
+bundle-config: Job, pipeline, compute and deployment configuration
+iac: Infrastructure as code
+repo: "The repository itself: files present, CI setup, history, dependency lockfiles"

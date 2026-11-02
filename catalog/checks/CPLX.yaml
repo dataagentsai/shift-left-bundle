@@ -10,6 +10,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: []
   cites: []
@@ -25,6 +26,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: []
   cites: []
@@ -40,6 +42,7 @@
   stage: commit
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: []
   cites: []
@@ -55,6 +58,7 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [python, pyspark, notebook]
   cost_impact: null
   dac: []
   cites: []
@@ -70,6 +74,55 @@
   stage: nightly
   gate: report
   found_by: static
+  applies_to: [python, pyspark, notebook]
+  cost_impact: null
+  dac: []
+  cites: []
+  related: []
+- id: SL-CPLX-06
+  status: draft
+  since: 0.2.0
+  title: Too many branches or return points
+  level: SHOULD
+  statement: A function SHOULD NOT have more branches or return points than the thresholds in core/gates.yaml.
+  why: A status-mapping function had 14 return points; a new status fell through to the wrong one.
+  fix: Replace the branches with a lookup table, or split the function.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [python, pyspark, notebook]
+  cost_impact: null
+  dac: []
+  cites: []
+  related: [SL-CPLX-01]
+- id: SL-CPLX-07
+  status: draft
+  since: 0.2.0
+  title: Query too complex
+  level: SHOULD
+  statement: A query SHOULD stay within the thresholds in core/gates.yaml for joins, nesting depth, conditional branches and common table expressions.
+  why: A 400-line view with 14 joins and four levels of nested subqueries could not be changed without breaking another report.
+  fix: Split it into named steps (views or models), each with one job.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [sql, notebook, dbt, materialized-view, metric-view]
+  cost_impact: medium
+  dac: []
+  cites: []
+  related: [SL-CPLX-02]
+- id: SL-CPLX-08
+  status: draft
+  since: 0.2.0
+  title: File too long
+  level: MAY
+  statement: A module MAY be split when it grows past the line limit in core/gates.yaml.
+  why: A 3,000-line utilities file held unrelated helpers; every change to it touched every job.
+  fix: Split by purpose.
+  stage: pr
+  gate: report
+  found_by: static
+  applies_to: [python, pyspark, notebook, sql]
   cost_impact: null
   dac: []
   cites: []

@@ -17,6 +17,9 @@ Rules:
   R8  no product or tool names in normative text (they belong in bindings/)
   R9  every check has exactly one binding entry per binding file, and nothing else is bound
   R10 binding entries name a declared tool, at least one rule, and a known status
+  R11 applies_to is a non-empty list of artifacts from core/artifacts.yaml
+  R12 every Ruff profile group is mapped to a check, every mapped check exists, and every
+      ruff_map key falls inside the strict profile
 """
 import re
 import sys
@@ -40,8 +43,8 @@ PRODUCTS = [
     "pandas", "pyarrow", "dbutils", "uv", "poetry",
 ]
 TEXT_FIELDS = ["title", "statement", "why", "fix"]
-REQUIRED = ["id", "status", "since", "title", "level", "statement", "why", "fix", "stage", "gate", "found_by"]
-LISTS = ["dac", "cites", "related"]
+REQUIRED = ["id", "status", "since", "title", "level", "statement", "why", "fix", "stage", "gate", "found_by", "applies_to"]
+LISTS = ["dac", "cites", "related", "applies_to"]
 STATUSES = {"draft", "active", "deprecated"}
 LEVELS = {"MUST", "SHOULD", "MAY"}
 FOUND_BY = {"static", "plan", "test", "repo"}
@@ -56,7 +59,7 @@ def y(p):
 def load_vocab(root=ROOT):
     return {"families": y(root / "core/families.yaml"), "stages": y(root / "core/stages.yaml"),
             "gates": set(y(root / "core/gates.yaml")["levels"]), "standards": y(root / "core/standards.yaml"),
-            "dac": set(y(root / "core/dac_ids.yaml"))}
+            "dac": set(y(root / "core/dac_ids.yaml")), "artifacts": set(y(root / "core/artifacts.yaml"))}
 
 
 def load_checks(root=ROOT):
@@ -114,6 +117,9 @@ def lint(recs, vocab):
             errs.append(f"{w}: unknown found_by '{r['found_by']}'")
         if r.get("cost_impact") not in COST_IMPACT:
             errs.append(f"{w}: cost_impact must be high, medium, low or null")
+        for a in r.get("applies_to") or [] if isinstance(r.get("applies_to"), list) else []:
+            if a not in vocab["artifacts"]:
+                errs.append(f"{w}: unknown artifact '{a}' in applies_to")
         for d in r.get("dac") or []:
             if d not in vocab["dac"]:
                 errs.append(f"{w}: DAC id '{d}' not in core/dac_ids.yaml")
@@ -160,9 +166,31 @@ def lint_bindings(recs, bindings):
     return errs
 
 
+def lint_ruff(recs, bindings):
+    errs = []
+    ids = {r.get("id") for r in recs}
+    for name, b in bindings.items():
+        prof = (b or {}).get("ruff_profiles")
+        rmap = (b or {}).get("ruff_map") or {}
+        if not prof:
+            continue
+        strict = set(prof.get("strict") or [])
+        if not set(prof.get("starter") or []) <= strict:
+            errs.append(f"binding {name}: starter profile has groups not in strict")
+        for g in sorted(strict - set(rmap)):
+            errs.append(f"binding {name}: Ruff group {g} has no ruff_map entry")
+        for code, cid in rmap.items():
+            if cid not in ids:
+                errs.append(f"binding {name}: ruff_map {code} -> {cid} is not a check")
+            if not any(code.startswith(g) for g in strict):
+                errs.append(f"binding {name}: ruff_map {code} is outside the strict profile")
+    return errs
+
+
 def main():
     recs = load_checks()
-    errs = lint(recs, load_vocab()) + lint_bindings(recs, load_bindings())
+    b = load_bindings()
+    errs = lint(recs, load_vocab()) + lint_bindings(recs, b) + lint_ruff(recs, b)
     for e in errs:
         print("ERROR", e)
     print(f"{len(recs)} checks, {len(errs)} errors")

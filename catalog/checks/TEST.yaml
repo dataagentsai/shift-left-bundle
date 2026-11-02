@@ -10,6 +10,7 @@
   stage: pr
   gate: block
   found_by: test
+  applies_to: [python, pyspark]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -25,6 +26,7 @@
   stage: pr
   gate: warn
   found_by: test
+  applies_to: [python, pyspark]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -40,6 +42,7 @@
   stage: pr
   gate: report
   found_by: repo
+  applies_to: [python, pyspark]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -55,6 +58,7 @@
   stage: pr
   gate: warn
   found_by: test
+  applies_to: [python, pyspark]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -70,6 +74,7 @@
   stage: nightly
   gate: report
   found_by: test
+  applies_to: [python, pyspark]
   cost_impact: null
   dac: [TEST-03]
   cites: []
@@ -85,7 +90,56 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [python, pyspark]
   cost_impact: null
   dac: [TEST-03]
   cites: []
   related: [SL-TEST-05]
+- id: SL-TEST-07
+  status: draft
+  since: 0.2.0
+  title: Model without data tests
+  level: SHOULD
+  statement: Every model in a transformation project SHOULD have data tests on its key, such as unique and not null, plus any accepted-values rules.
+  why: A model's key was assumed unique; a source change made it repeat and every downstream total doubled.
+  fix: Add key tests to the model's properties file.
+  stage: pr
+  gate: warn
+  found_by: static
+  applies_to: [dbt]
+  cost_impact: null
+  dac: [DUP-01, TEST-03]
+  cites: []
+  related: [SL-TEST-08]
+- id: SL-TEST-08
+  status: draft
+  since: 0.2.0
+  title: Model logic without unit tests
+  level: SHOULD
+  statement: Models with business logic, such as conditional mappings, date handling or window functions, SHOULD have unit tests with given input rows and expected output rows.
+  why: A fiscal-week calculation was wrong in the last week of December and only real data ever exercised it.
+  fix: Add a unit test with rows at the edge cases.
+  stage: pr
+  gate: report
+  found_by: static
+  applies_to: [dbt]
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-TEST-07]
+- id: SL-TEST-09
+  status: draft
+  since: 0.2.0
+  title: Known data pattern without its standard test cases
+  level: SHOULD
+  statement: Code that implements a known data pattern, such as history tracking with versioned rows, de-duplication, incremental loads or late-arriving data, SHOULD be tested against that pattern's standard set of cases.
+  why: A history-tracking merge was tested only for "new row" and "changed row"; the same batch arriving twice opened a duplicate current version for every customer.
+  fix: Copy the pattern's case table from the bundle's test kit and run it against your function.
+  stage: pr
+  gate: report
+  found_by: test
+  applies_to: [python, pyspark, sql, dbt]
+  cost_impact: null
+  dac: [SCD-02, DUP-01, TEST-03]
+  cites: []
+  related: [SL-TEST-02, SL-PURE-02]

@@ -31,6 +31,19 @@ complexity:
   cognitive_max: 15            # SL-CPLX-02
   statements_max: 50           # SL-CPLX-03
   arguments_max: 5             # SL-CLEAN-02
+  returns_max: 6               # SL-CPLX-06
+  branches_max: 12             # SL-CPLX-06
+  file_lines_max: 500          # SL-CPLX-08
+  method_chain_max: 6          # SL-CLEAN-25, data-frame calls in one chain
+
+sql_complexity:                # SL-CPLX-07: each measure is checked on its own; no combined score
+  joins_max: 8
+  nesting_depth_max: 3         # subqueries inside subqueries
+  case_branches_max: 12        # WHEN branches across the query
+  ctes_max: 10
+
+materialized_views:
+  chain_depth_max: 2           # SL-COST-CODE-23
 
 dependencies:
   block_at_severity: high      # SL-DEP-01: high and critical block; medium and low warn

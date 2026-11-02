@@ -48,3 +48,7 @@ SETUP:
   name: Repository setup
   asks: What should the repository have that it doesn't?
   found_by: repo
+SEM:
+  name: Semantic correctness
+  asks: Will a metric give the right number, defined once, without double counting?
+  found_by: static

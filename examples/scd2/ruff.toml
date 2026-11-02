@@ -1,0 +1,5 @@
+line-length = 130
+
+[lint]
+select = ["F", "E", "W", "B", "RET", "SIM", "S", "C90", "DTZ", "A"]
+ignore = ["S101"]  # assert is how pytest tests

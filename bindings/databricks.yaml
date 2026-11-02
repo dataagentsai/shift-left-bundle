@@ -1,5 +1,9 @@
 # Databricks binding v0 (SL-015). The only place product and tool names appear.
 # Platform: Databricks on PySpark 3.5, Python 3.11, Databricks SQL, Asset Bundles (databricks.yml).
+# applies_to on this platform: notebook = .ipynb and source-format .py (# COMMAND / # MAGIC); sql = .sql files,
+# %sql and MAGIC %sql cells, spark.sql("...") strings (extracted by costlens inputs/); dbt = dbt-databricks projects;
+# metric-view = CREATE VIEW ... WITH METRICS LANGUAGE YAML; materialized-view = Databricks SQL and pipeline MVs;
+# bundle-config = databricks.yml and resources/*.yml.
 #
 # Every check in catalog/ has an entry. Fields:
 #   tool:   the adapter that finds it (see `tools` below)
@@ -19,7 +23,15 @@ tools:
   sqlfluff: {licence: MIT, kind: SQL lint and format, dialect databricks}
   sqlglot: {licence: MIT, kind: SQL syntax tree for our own rules}
   gitleaks: {licence: MIT, kind: secrets in files and history}
-  pip-audit: {licence: Apache-2.0, kind: known vulnerabilities}
+  pip-audit: {licence: Apache-2.0, kind: known vulnerabilities, Python only; fallback}
+  osv-scanner: {licence: Apache-2.0, kind: known vulnerabilities from lockfiles, OSV database (the one OpenSSF Scorecard uses)}
+  nbstripout: {licence: MIT, kind: strips notebook outputs on commit}
+  dbt-bouncer: {licence: MIT, kind: rules over dbt manifest.json from dbt parse (offline)}
+  dbt-score: {licence: MIT, kind: scores dbt model metadata (offline)}
+  dbt-project-evaluator: {licence: Apache-2.0, kind: dbt Labs DAG best-practice rules; 1.x builds in the warehouse, so trial only}
+  mv-explain: {licence: Databricks SQL, kind: EXPLAIN CREATE MATERIALIZED VIEW on a dev warehouse (Runtime 17.3+), pre-deploy}
+  metricview: {licence: ours, kind: extract metric view YAML, validate against the YAML spec 1.1 schema, parse expressions with sqlglot}
+  test-kit: {licence: ours, kind: standard case tables for known data patterns (SCD2, dedupe, incremental, late data)}
   pip-licenses: {licence: MIT, kind: licence list}
   coverage: {licence: Apache-2.0, kind: coverage.py with pytest-cov and diff-cover}
   mutmut: {licence: BSD-3-Clause, kind: mutation testing}
@@ -85,7 +97,7 @@ checks:
   SL-SECRET-02: {tool: gitleaks, rules: [git history scan], status: adopt}
   SL-SECRET-03: {tool: opengrep, rules: [sl-credential-in-config], status: build, note: "password/token keys with literal values in *.yml, *.json, *.conf; allow {{secrets/scope/key}} references"}
   # ---- dependencies
-  SL-DEP-01: {tool: pip-audit, rules: [vulnerability database], status: adopt}
+  SL-DEP-01: {tool: osv-scanner, rules: [OSV database, lockfile scan], status: adopt, note: "pip-audit as fallback for repos with no lockfile"}
   SL-DEP-02: {tool: repo-review, rules: [sl-lockfile-present], status: build, note: "uv.lock, poetry.lock or fully pinned requirements"}
   SL-DEP-03: {tool: pip-licenses, rules: [allow-list], status: trial}
   SL-DEP-04: {tool: repo-review, rules: [sl-unmaintained-dependency], status: build, note: "last release date from the PyPI JSON API"}
@@ -120,6 +132,48 @@ checks:
   SL-CLEAN-06: {tool: ruff, rules: [ARG001, ARG002, F401], status: adopt}
   SL-CLEAN-07: {tool: ruff, rules: [PLR2004], status: adopt, note: "noisy; report only"}
   SL-CLEAN-08: {tool: repo-review, rules: [sl-thin-notebooks], status: build, note: "share of function definitions in notebooks vs modules"}
+  # ---- added in 0.2.0
+  SL-COST-CODE-22: {tool: sqlglot, rules: [sl-mv-nondeterministic], status: build, note: "rand(), uuid() and similar in the MV query; time functions allowed only in WHERE per the incremental-refresh docs (checked 2 Nov 2026)"}
+  SL-COST-CODE-23: {tool: sqlglot, rules: [sl-mv-chain-depth], status: build}
+  SL-COST-CONFIG-09: {tool: mv-explain, rules: [EXPLAIN CREATE MATERIALIZED VIEW], status: adopt, note: "not offline: a few seconds on a dev warehouse before deploy"}
+  SL-COST-CONFIG-10: {tool: repo-review, rules: [sl-mv-strict-policy-in-dev], status: build, note: "REFRESH POLICY INCREMENTAL STRICT in the dev target"}
+  SL-SEC-09: {tool: nbstripout, rules: [--verify], status: adopt}
+  SL-SEC-10: {tool: ruff, rules: [S], status: adopt, note: "every S rule not mapped to SL-SEC-01..05 (see ruff_map)"}
+  SL-DEP-06: {tool: opengrep, rules: [sl-pip-install-in-notebook], status: build, note: "%pip install / MAGIC %pip without ==version"}
+  SL-TEST-07: {tool: dbt-bouncer, rules: [check_model_has_unique_test], status: adopt, note: "check name to confirm against dbt-bouncer docs in Tier 3"}
+  SL-TEST-08: {tool: dbt-bouncer, rules: [check_model_has_unit_tests], status: adopt, note: "check name to confirm in Tier 3"}
+  SL-TEST-09: {tool: test-kit, rules: [scd2, dedupe, incremental, late-data], status: build}
+  SL-CPLX-06: {tool: ruff, rules: [PLR0911, PLR0912], status: adopt}
+  SL-CPLX-07: {tool: sqlglot, rules: [sl-sql-complexity], status: build, note: "costlens excessive_joins, nested_subqueries_excessive, excessive_query_size cover part of it"}
+  SL-CPLX-08: {tool: pylint, rules: [C0302], status: trial}
+  SL-CLEAN-09: {tool: ruff, rules: [ANN], status: adopt}
+  SL-CLEAN-10: {tool: ruff, rules: [D], status: adopt, note: "public functions and modules only (D100-D104)"}
+  SL-CLEAN-11: {tool: ruff, rules: [FBT], status: adopt}
+  SL-CLEAN-12: {tool: ruff, rules: [SIM, C4, UP, FURB, PERF, PIE], status: adopt}
+  SL-CLEAN-13: {tool: ruff, rules: [RET501, RET502, RET503], status: adopt}
+  SL-CLEAN-14: {tool: opengrep, rules: [sl-df-attribute-column], status: build, note: "Palantir PySpark style guide; trial linters may already have it"}
+  SL-CLEAN-15: {tool: ruff, rules: [F403, F405, A001, A002], status: adopt, note: "from pyspark.sql.functions import * shadows sum, max, min, filter, round, abs"}
+  SL-CLEAN-16: {tool: ruff, rules: [DTZ], status: adopt}
+  SL-CLEAN-17: {tool: ruff, rules: [T20, LOG, G], status: adopt}
+  SL-CLEAN-18: {tool: ruff, rules: [PTH], status: adopt}
+  SL-CLEAN-19: {tool: ruff, rules: [TRY, EM, RSE, B904], status: adopt}
+  SL-CLEAN-20: {tool: ruff, rules: [B, RUF, PLE, PLW, PLC, SLF], status: adopt, note: "every rule in these groups not mapped to a more specific check"}
+  SL-CLEAN-21: {tool: ruff, rules: [PT], status: adopt}
+  SL-CLEAN-22: {tool: ruff, rules: [PD, NPY], status: adopt}
+  SL-CLEAN-23: {tool: opengrep, rules: [sl-notebook-run-chain], status: build, note: "%run and dbutils.notebook.run used to pull in definitions"}
+  SL-CLEAN-24: {tool: ruff, rules: [FIX, TD], status: adopt}
+  SL-CLEAN-25: {tool: opengrep, rules: [sl-long-method-chain], status: build, note: "Palantir PySpark style guide"}
+  SL-CLEAN-26: {tool: opengrep, rules: [sl-inline-complex-condition], status: build, note: "Palantir PySpark style guide"}
+  SL-CLEAN-27: {tool: dbt-bouncer, rules: [check_model_has_no_hardcoded_references], status: adopt, note: "or dbt-project-evaluator fct_hard_coded_references; confirm in Tier 3"}
+  SL-CLEAN-28: {tool: dbt-project-evaluator, rules: [fct_direct_join_to_source, fct_marts_or_intermediate_dependent_on_source, fct_staging_dependent_on_staging], status: trial}
+  SL-SETUP-10: {tool: dbt-score, rules: [has_description, columns_have_description], status: adopt}
+  SL-SEM-01: {tool: metricview, rules: [yaml-schema-1.1, expression-parse], status: build, note: "YAML spec 1.1 per Databricks docs (checked 2 Nov 2026); dbt semantic models via dbt parse"}
+  SL-SEM-02: {tool: metricview, rules: [measure-no-aggregate], status: build}
+  SL-SEM-03: {tool: metricview, rules: [avg-of-ratio], status: build}
+  SL-SEM-04: {tool: metricview, rules: [join-cardinality], status: build, note: "spec 1.1 cardinality field (Runtime 18.1+)"}
+  SL-SEM-05: {tool: metricview, rules: [duplicate-metric-name], status: build}
+  SL-SEM-06: {tool: metricview, rules: [missing-comment], status: build}
+  SL-SEM-07: {tool: metricview, rules: [golden-rows], status: build, note: "rewrite each measure as GROUP BY on tiny local tables; to be proven"}
   # ---- style
   SL-STYLE-01: {tool: ruff, rules: [ruff format], status: adopt}
   SL-STYLE-02: {tool: ruff, rules: [F, E], status: adopt}
@@ -130,11 +184,93 @@ checks:
   SL-SETUP-02: {tool: scorecard, rules: [CI-Tests], status: adopt, note: "plus a repo-review plugin reading the workflow files"}
   SL-SETUP-03: {tool: repo-review, rules: [sl-coverage-gate], status: build}
   SL-SETUP-04: {tool: repo-review, rules: [sl-secret-scanning], status: build}
-  SL-SETUP-05: {tool: scorecard, rules: [Branch-Protection], status: adopt}
+  SL-SETUP-05: {tool: scorecard, rules: [Branch-Protection], status: adopt, note: "Scorecard is GitHub-first (partial GitLab, no Azure DevOps); OpenSSF Allstar can enforce it on GitHub"}
   SL-SETUP-06: {tool: repo-review, rules: [sl-bundle-validate-in-ci], status: build}
   SL-SETUP-07: {tool: repo-review, rules: [sl-sql-lint-configured], status: build}
   SL-SETUP-08: {tool: repo-review, rules: [sl-test-setup], status: build}
   SL-SETUP-09: {tool: scorecard, rules: [aggregate score], status: adopt}
+
+# Ruff rule profiles (Ruff 0.17.3: 973 rules, 832 stable, counted 2 Nov 2026).
+# starter = 404 stable rules, strict = 600. Day one runs starter, warn-only except the block list.
+ruff_profiles:
+  starter: [F, E, W, I, B, C4, SIM, RET, UP, PERF, S, BLE, DTZ, N, ARG, T20, RUF, C90, A, PL, PT]
+  strict: [F, E, W, I, B, C4, SIM, RET, UP, PERF, S, BLE, DTZ, N, ARG, T20, RUF, C90, A, PL, PT,
+           FURB, TRY, PTH, ERA, LOG, G, PIE, ISC, FBT, EM, RSE, ANN, D, PD, NPY, ICN, TID, SLF, FIX, TD]
+
+# Every Ruff finding is reported under one catalog check. Most specific match wins: full code, then prefix.
+ruff_map:
+  F: SL-STYLE-02
+  F401: SL-CLEAN-06
+  F403: SL-CLEAN-15
+  F405: SL-CLEAN-15
+  E: SL-STYLE-02
+  E722: SL-CLEAN-04
+  W: SL-STYLE-02
+  I: SL-STYLE-01
+  B: SL-CLEAN-20
+  B006: SL-CLEAN-03
+  B904: SL-CLEAN-19
+  C4: SL-CLEAN-12
+  SIM: SL-CLEAN-12
+  SIM102: SL-CLEAN-01
+  RET: SL-CLEAN-01
+  RET501: SL-CLEAN-13
+  RET502: SL-CLEAN-13
+  RET503: SL-CLEAN-13
+  UP: SL-CLEAN-12
+  PERF: SL-CLEAN-12
+  FURB: SL-CLEAN-12
+  PIE: SL-CLEAN-12
+  S: SL-SEC-10
+  S608: SL-SEC-01
+  S307: SL-SEC-02
+  S102: SL-SEC-02
+  S301: SL-SEC-03
+  S506: SL-SEC-03
+  S501: SL-SEC-04
+  S323: SL-SEC-04
+  S602: SL-SEC-05
+  S605: SL-SEC-05
+  S105: SL-SECRET-01
+  S106: SL-SECRET-01
+  S107: SL-SECRET-01
+  S110: SL-CLEAN-04
+  S112: SL-CLEAN-04
+  BLE: SL-CLEAN-04
+  DTZ: SL-CLEAN-16
+  N: SL-STYLE-04
+  ARG: SL-CLEAN-06
+  T20: SL-CLEAN-17
+  LOG: SL-CLEAN-17
+  G: SL-CLEAN-17
+  RUF: SL-CLEAN-20
+  C90: SL-CPLX-01
+  A: SL-CLEAN-15
+  PL: SL-CLEAN-20
+  PLR: SL-CLEAN-12
+  PLR0911: SL-CPLX-06
+  PLR0912: SL-CPLX-06
+  PLR0913: SL-CLEAN-02
+  PLR0915: SL-CPLX-03
+  PLR1702: SL-CLEAN-01
+  PLR2004: SL-CLEAN-07
+  PT: SL-CLEAN-21
+  TRY: SL-CLEAN-19
+  EM: SL-CLEAN-19
+  RSE: SL-CLEAN-19
+  PTH: SL-CLEAN-18
+  ERA: SL-CLEAN-05
+  ISC: SL-STYLE-02
+  FBT: SL-CLEAN-11
+  ANN: SL-CLEAN-09
+  D: SL-CLEAN-10
+  PD: SL-CLEAN-22
+  NPY: SL-CLEAN-22
+  ICN: SL-STYLE-04
+  TID: SL-STYLE-02
+  SLF: SL-CLEAN-20
+  FIX: SL-CLEAN-24
+  TD: SL-CLEAN-24
 
 # Concrete calls per purity category (core/purity.yaml). Patterns are attribute or function names as seen in the syntax tree.
 purity:

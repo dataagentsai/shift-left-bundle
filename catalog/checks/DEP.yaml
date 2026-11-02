@@ -10,6 +10,7 @@
   stage: pr
   gate: block
   found_by: static
+  applies_to: [repo]
   cost_impact: null
   dac: [REL-01]
   cites:
@@ -29,6 +30,7 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [repo]
   cost_impact: null
   dac: [REL-01, REL-03]
   cites:
@@ -46,6 +48,7 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [repo]
   cost_impact: null
   dac: []
   cites:
@@ -63,6 +66,7 @@
   stage: nightly
   gate: report
   found_by: static
+  applies_to: [repo]
   cost_impact: null
   dac: [REL-01]
   cites:
@@ -80,7 +84,26 @@
   stage: pr
   gate: warn
   found_by: static
+  applies_to: [repo]
   cost_impact: null
   dac: [ENV-01, TEST-03]
   cites: []
   related: [SL-TEST-04]
+- id: SL-DEP-06
+  status: draft
+  since: 0.2.0
+  title: Libraries installed inside notebooks without versions
+  level: SHOULD
+  statement: Notebooks SHOULD NOT install libraries with in-notebook install commands; when they must, every library SHOULD have an exact version.
+  why: An in-notebook install without a version pulled a new major release on a Monday and the job broke with no code change.
+  fix: Declare libraries in the job or environment definition with versions; remove the install command.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [notebook]
+  cost_impact: null
+  dac: [REL-01]
+  cites:
+  - standard: OPENSSF-SCORECARD
+    ref: Pinned-Dependencies
+  related: [SL-DEP-02]

@@ -1,0 +1,113 @@
+# SL-SEM: semantic correctness of metric definitions (a semantic layer, or metric definitions in a transformation project).
+- id: SL-SEM-01
+  status: draft
+  since: 0.2.0
+  title: Metric definition doesn't parse or validate
+  level: MUST
+  statement: A metric definition MUST match the platform's published specification, and every dimension and measure expression in it MUST parse as valid query text.
+  why: A typo in a measure expression was found only at deploy time, after the release had already started.
+  fix: Fix the field or expression the check names.
+  stage: commit
+  gate: block
+  found_by: static
+  applies_to: [metric-view, dbt]
+  cost_impact: null
+  dac: [GATE-01]
+  cites: []
+  related: []
+- id: SL-SEM-02
+  status: draft
+  since: 0.2.0
+  title: Measure with no aggregate
+  level: MUST
+  statement: Every measure MUST aggregate its values, so it gives one answer per group at any level of detail.
+  why: A measure was written as a plain column; at monthly level it returned one arbitrary row's value instead of the month's total.
+  fix: Wrap the expression in the intended aggregate.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [metric-view, dbt]
+  cost_impact: null
+  dac: []
+  cites: []
+  related: [SL-SEM-03]
+- id: SL-SEM-03
+  status: draft
+  since: 0.2.0
+  title: Ratio averaged row by row
+  level: MUST
+  statement: A ratio measure MUST be computed as one aggregate divided by another, never as the average of per-row ratios.
+  why: Margin was defined as the average of each order's margin; small orders counted as much as large ones, and the reported margin was 6 points too high.
+  fix: Define it as the sum of the numerator divided by the sum of the denominator.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [metric-view, dbt]
+  cost_impact: null
+  dac: []
+  cites: []
+  related: [SL-SEM-02]
+- id: SL-SEM-04
+  status: draft
+  since: 0.2.0
+  title: Join that can multiply rows, not declared
+  level: MUST
+  statement: Every join in a metric definition MUST declare its cardinality, and a join that can match many rows MUST NOT feed a measure that adds up values from the other side.
+  why: Joining orders to order lines made each order's shipping fee appear once per line, and shipping revenue tripled.
+  fix: Declare the cardinality; aggregate at the right grain before joining, or measure from the side that is not repeated.
+  stage: commit
+  gate: warn
+  found_by: static
+  applies_to: [metric-view, dbt]
+  cost_impact: null
+  dac: [DUP-01]
+  cites: []
+  related: []
+- id: SL-SEM-05
+  status: draft
+  since: 0.2.0
+  title: Same metric defined differently in two places
+  level: MUST
+  statement: A metric name MUST have one definition across the repository; two definitions with the same name and different expressions MUST be reported.
+  why: Revenue meant gross in one definition and net of refunds in another; two dashboards disagreed by 9% and both were "right".
+  fix: Keep one definition and reference it; rename the other if it is a different metric.
+  stage: pr
+  gate: warn
+  found_by: static
+  applies_to: [metric-view, dbt]
+  cost_impact: null
+  dac: []
+  cites: []
+  related: []
+- id: SL-SEM-06
+  status: draft
+  since: 0.2.0
+  title: Metric or dimension without a description
+  level: SHOULD
+  statement: Every metric and dimension SHOULD have a description, and metrics SHOULD say what they include and exclude.
+  why: An assistant answering questions over the metrics picked "orders" instead of "completed orders", because neither was described.
+  fix: Add descriptions, starting with the most-used metrics.
+  stage: pr
+  gate: report
+  found_by: static
+  applies_to: [metric-view, dbt]
+  cost_impact: null
+  dac: []
+  cites: []
+  related: [SL-SETUP-10]
+- id: SL-SEM-07
+  status: draft
+  since: 0.2.0
+  title: Metric with no test of known answers
+  level: SHOULD
+  statement: Every metric SHOULD have a test that runs its definition on a few known input rows and checks the expected answer at more than one level of detail.
+  why: A change to a filter in a metric definition passed review and silently dropped cancelled orders from the denominator.
+  fix: Add input rows and expected answers per metric; the bundle runs them offline.
+  stage: pr
+  gate: report
+  found_by: test
+  applies_to: [metric-view, dbt]
+  cost_impact: null
+  dac: [TEST-03]
+  cites: []
+  related: [SL-SEM-01]

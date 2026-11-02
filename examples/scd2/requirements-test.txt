@@ -1,0 +1,7 @@
+# Pin pyspark to the target cluster's Spark version (SL-DEP-05). Spark 3.5 needs Java 17 on the machine.
+pyspark==3.5.1
+pandas==2.2.3        # needed by pyspark.testing in Spark 3.5
+pyarrow==17.0.0      # needed by pyspark.testing in Spark 3.5
+numpy<2              # older pandas and pyspark 3.5 break on numpy 2
+pytest==8.3.5
+pytest-cov==6.1.1

@@ -1,0 +1,15 @@
+# Pull-request checks for Azure DevOps. Not yet run (2 Nov 2026); Tier 7 task SL-072 verifies it.
+trigger: none
+pr: [main]
+pool: { vmImage: ubuntu-latest }
+steps:
+  - checkout: self
+    fetchDepth: 0
+  - task: JavaToolInstaller@0
+    inputs: { versionSpec: "17", jdkArchitectureOption: x64, jdkSourceOption: PreInstalled }
+  - task: UsePythonVersion@0
+    inputs: { versionSpec: "3.11" }
+  - script: pip install -r requirements-test.txt pre-commit diff-cover
+  - script: pre-commit run --from-ref origin/$(System.PullRequest.TargetBranchName) --to-ref HEAD
+  - script: pytest -q --cov --cov-branch --cov-report=xml
+  - script: diff-cover coverage.xml --compare-branch=origin/$(System.PullRequest.TargetBranchName) --fail-under=80

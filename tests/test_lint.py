@@ -15,7 +15,7 @@ GOOD = {
     "_file": "COST-CODE", "id": "SL-COST-CODE-01", "status": "draft", "since": "0.1.0",
     "title": "Whole dataset pulled into one process", "level": "MUST",
     "statement": "Code MUST NOT collect a whole dataset.", "why": "It crashed.", "fix": "Limit first.",
-    "stage": "commit", "gate": "warn", "found_by": "static", "cost_impact": "high",
+    "stage": "commit", "gate": "warn", "found_by": "static", "applies_to": ["pyspark"], "cost_impact": "high",
     "dac": ["COST-02"], "cites": [{"standard": "CWE", "ref": "CWE-89"}], "related": [],
 }
 
@@ -62,6 +62,11 @@ CASES = [
     ("platform name in statement", with_(statement="Code MUST NOT call collect on a Spark dataset."), "product name 'spark'"),
     ("tool name in fix", with_(fix="Run ruff."), "product name 'ruff'"),
     ("product name in title", with_(title="Databricks job"), "product name 'databricks'"),
+    ("missing applies_to", with_(applies_to=[]), "missing 'applies_to'"),
+    ("applies_to not a list", with_(applies_to="sql"), "'applies_to' must be a list"),
+    ("unknown artifact", with_(applies_to=["cobol"]), "unknown artifact"),
+    ("dbt is fine in applies_to", with_(applies_to=["dbt", "metric-view"]), None),
+    ("dbt in statement is a product name", with_(statement="Code MUST NOT skip dbt tests."), "product name 'dbt'"),
     ("part of a longer word is fine", with_(why="A sparkline chart was slow; the queue grew."), None),
 ]
 
@@ -102,11 +107,31 @@ def test_lint_bindings(name, checks, expect):
         assert any(expect in e for e in errs), errs
 
 
+RUFF_CASES = [
+    ("valid profiles", {"starter": ["S"], "strict": ["S", "D"]}, {"S": "SL-COST-CODE-01", "D": "SL-COST-CODE-01", "S608": "SL-COST-CODE-01"}, None),
+    ("starter wider than strict", {"starter": ["S", "X"], "strict": ["S"]}, {"S": "SL-COST-CODE-01"}, "starter profile has groups not in strict"),
+    ("group without a mapping", {"starter": ["S"], "strict": ["S", "D"]}, {"S": "SL-COST-CODE-01"}, "Ruff group D has no ruff_map entry"),
+    ("mapping to a missing check", {"starter": ["S"], "strict": ["S"]}, {"S": "SL-SEC-99"}, "is not a check"),
+    ("mapping outside the profile", {"starter": ["S"], "strict": ["S"]}, {"S": "SL-COST-CODE-01", "ANN001": "SL-COST-CODE-01"}, "outside the strict profile"),
+]
+
+
+@pytest.mark.parametrize("name, prof, rmap, expect", RUFF_CASES, ids=[c[0] for c in RUFF_CASES])
+def test_lint_ruff(name, prof, rmap, expect):
+    errs = lint.lint_ruff([with_()], {"test": {"ruff_profiles": prof, "ruff_map": rmap}})
+    if expect is None:
+        assert errs == []
+    else:
+        assert any(expect in e for e in errs), errs
+
+
 def test_real_catalog_is_clean():
     recs = lint.load_checks()
     assert len(recs) >= 60
     assert lint.lint(recs, VOCAB) == []
-    assert lint.lint_bindings(recs, lint.load_bindings()) == []
+    b = lint.load_bindings()
+    assert lint.lint_bindings(recs, b) == []
+    assert lint.lint_ruff(recs, b) == []
 
 
 def test_every_family_has_checks():
