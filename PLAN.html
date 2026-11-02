@@ -255,18 +255,19 @@ skills/         a Claude skill that reads REVIEW.md and proposes fixes (LLM only
 <p>Branching: short-lived branches into a protected main, pull requests required, the bundle's PR job a required status check. Versions of the bundle are git tags; client repos pin a tag, so a new rule never breaks them by surprise.</p>
 <p>Rule: deterministic first. Every check is a tool or a script. An LLM is used only to explain findings or draft a refactor of an impure function, and never decides pass or fail.</p>
 
-<h2 id="plan">8. Plan</h2>
+<h2 id="plan">8. Plan, by tier</h2>
+<p>Task-level list with ids: <code>TODO.md</code>.</p>
 <div class="wrap"><table>
-<tr><th>Step</th><th>What</th><th>Status</th></tr>
-<tr><td>0</td><td>Reuse check (REUSE.md)</td><td>done 2 Nov</td></tr>
-<tr><td>1</td><td>Decisions D1–D8</td><td>yours</td></tr>
-<tr><td>2</td><td>Spec v0.1: check record format + ~60 checks across the 12 families, DAC links, linter + table-driven tests</td><td>next</td></tr>
-<tr><td>3</td><td>Sample repo with planted problems + hidden answer key (cost, security, impure functions, untested logic, missing setup, false-positive traps)</td><td>next</td></tr>
-<tr><td>4</td><td>Runner + Databricks binding wiring the adopted tools; SARIF + REVIEW.md; run 1 on the sample</td><td>later</td></tr>
-<tr><td>5</td><td>The delta: purity report, empty-table harness, repo-review plugins</td><td>later</td></tr>
-<tr><td>6</td><td>Real repo run (data-platform-framework or Project5)</td><td>later</td></tr>
-<tr><td>7</td><td>Tutorial page on cleandataengineering.ai</td><td>later</td></tr>
-<tr><td>8</td><td>Azure binding (ADF, Azure DevOps), then others</td><td>later</td></tr>
+<tr><th>Tier</th><th>What</th><th>Status</th></tr>
+<tr><td>0</td><td>Ground: reuse check, decisions, plan, public repo, site guide</td><td>done 2 Nov</td></tr>
+<tr><td>1</td><td>Spec v0.1: check format, ~60 checks in 12 families, purity lists, gate policy, Databricks binding, linter + table-driven tests</td><td>next</td></tr>
+<tr><td>2</td><td>Proof material: sample repo, planted problems, false-positive traps, hidden answer key, scoring</td><td>next</td></tr>
+<tr><td>3</td><td>Off-the-shelf tools through one runner (Ruff, SQLFluff, sqlglot, Opengrep, gitleaks, pip-audit, coverage, complexipy…), SARIF, gate + baseline, run 1</td><td>later</td></tr>
+<tr><td>4</td><td>Cost adapter: existing CostLens cost rules behind the cost port; trial young PySpark linters; add CartesianProduct and Python UDF plan rules</td><td>later</td></tr>
+<tr><td>5</td><td>The delta: purity report, test-time purity fixture, empty-table plan harness, gap report, joined view, run 2</td><td>later</td></tr>
+<tr><td>6</td><td>Real repo run, cut noise, feed back, run 3</td><td>later</td></tr>
+<tr><td>7</td><td>Teach and release (alongside): site guide, Claude skill, CI templates, v0.1 tag</td><td>alongside</td></tr>
+<tr><td>8</td><td>Azure binding; split catalog repo when stable</td><td>later</td></tr>
 </table></div>
 
 <h2 id="decide">9. Decisions (all agreed as recommended, 2 Nov 2026)</h2>
