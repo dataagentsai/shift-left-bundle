@@ -15,7 +15,7 @@ except Tier 7 (teaching), which runs alongside.
 | 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | done 2 Nov: 8 adapters, run 1 = 34/101, 0 false alarms, hook and baseline proven |
 | 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | done 2 Nov: run 2 = 64/101, 0 false alarms |
 | 5 | The delta: purity report, empty-table plan harness, gap report | done 2 Nov: run 5 = 88/101; with our own pattern rules (SL-064) run 6 = 97/101, 0 false alarms |
-| 6 | Real repo, cut the noise, run 2 | in progress: e-commerce repo scanned, 10 noise rules (276 → 172 findings, 19 → 4 blocking, all 4 correct); sample still 97/101, 0 false alarms; Sonar gaps: SL-065 done (spec 0.3, 136 checks, run 8 = 102/106, 0/19 false alarms), SL-066 pyright dropped after trial; repo 2 (DLT framework) done: 4 more noise rules, 228 → 117 findings, 3 blocking, all correct; SL-067–069 and SL-065b next |
+| 6 | Real repo, cut the noise, run 2 | in progress: e-commerce repo scanned, 10 noise rules (276 → 172 findings, 19 → 4 blocking, all 4 correct); sample still 97/101, 0 false alarms; Sonar gaps: SL-065 done (spec 0.3, 136 checks, run 8 = 102/106, 0/19 false alarms), SL-066 pyright dropped after trial; repo 2 (DLT framework) done: 4 more noise rules, 228 → 117 findings, 3 blocking, all correct; SL-069 done (blockers name their source; e-commerce 4 → 1); SL-067, SL-068 and SL-065b next |
 | 7 | Teach and release: site pages, Claude skill, v0.1 tag | alongside |
 | 8 | Azure binding | later |
 
@@ -113,7 +113,7 @@ except Tier 7 (teaching), which runs alongside.
 | SL-066 | Type-flow bugs (wrong argument count, calling a non-callable, attribute that does not exist): trial pyright in basic mode, Databricks globals declared | dropped 3 Nov after trial: pyright 1.1.414 basic, 1.3 s and about 300 MB per repo; 0 real bugs on both repos; false alarms on `SparkSession.builder.getOrCreate()` (PySpark's own types), a Delta merge argument and a mixed-type list; 1 valid deprecated import. Retry on a repo with typed library code |
 | SL-067 | Duplicate code: finish the SL-CPLX-05 trial (pylint R0801 or jscpd) | — |
 | SL-068 | CI workflow security (unpinned actions, script injection in GitHub Actions): trial zizmor | — |
-| SL-069 | Taint across functions (a widget or parameter reaching SQL through a helper): extend sql-identifiers-only to follow one call level | — |
+| SL-069 | Taint across functions (a widget or parameter reaching SQL through a helper): extend sql-identifiers-only to follow one call level | done 3 Nov: src/shiftleft/taint.py traces each value in SQL text (assignments, loops, call sites, return values, up to 2 function hops) across the repo; untrusted input stays block and the message names the source line, table data warn, config report, untraced unchanged. E-commerce 4 → 1 blocking (the widget one), DLT deploy blocker now says command line at line 142; 14 table-driven tests |
 | SL-063 | Portfolio view for leaders across repos (D9 level 3), after the first real repo | — |
 
 ## Tier 7: teach and release (runs alongside)

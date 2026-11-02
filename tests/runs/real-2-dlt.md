@@ -44,3 +44,7 @@ The repo 1 rules carried over with almost nothing to do (one one-row collect). T
 - **The blockers on both real repos are the same kind:** values or names put into SQL text. Both repos' authors knew
   the inputs were trusted; neither said so in the code. The allow marker with a reason is the right answer when that
   is true.
+
+## Update 3 Nov: values traced (SL-069)
+
+The deploy blocker now says "untrusted input reaches the SQL text: command-line at deploy/create_dlt_pipelines.py:142". `recon.py` is not traced (its rows are a dict built field by field in another module), so it keeps the tool's wording and stays blocking.

@@ -14,6 +14,7 @@ Score any run with `uv run scripts/score.py findings.json`.
 | 6 | 2 Nov 2026 | run 5 + our own pattern rules (secret printed, personal data shown, remote test session, count-only test, logic in notebooks, column as attribute, %run chain, inline condition, runtime match) | 97/101 | 98/101 | 0/16 | 66 |
 | 7 | 2 Nov 2026 | run 6 + noise rules learned on the first real repo (refine.py) | 97/101 | 98/101 | 0/16 | 66 |
 | 8 | 3 Nov 2026 | run 7 + five PySpark checks from the Sonar comparison; key grown to 106 planted and 19 traps | 102/106 | 103/106 | 0/19 | 77 |
+| 10 | 3 Nov 2026 | run 8 + noise rules from repo 2 + SQL value tracing (taint.py) | 102/106 | 103/106 | 0/19 | 66 |
 | 2 | 2 Nov 2026 | run 1 + CostLens oss-core, SparkDoctor and 2 pyspark-antipattern rules, our materialized-view, grant and bundle rules, notebook %sql extraction | 64/101 | 66/101 | 0/16 | 65 |
 
 Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`, `runs/run-5-tier5.md`, `runs/run-6-patterns.md`. Real repos: `runs/real-1-ecom.md`, `runs/real-2-dlt.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
@@ -115,3 +116,13 @@ Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-run
   `wide_orders`, a join with no type in the notebook, and a long withColumn chain in `gold_kpis`.
 - **On the real e-commerce repo the five rules added 3 findings, all report level and all true** (chains of 4–7
   withColumn calls). Its author states every join type and only uses ranking windows.
+
+## What run 10 taught us (3 Nov)
+
+- **Tracing where SQL values come from changes the gate, not the catch.** The score is unchanged (102/106). One planted
+  problem moved from block to warn: the UPDATE in `daily_load.py` takes `row.customer_id` from a `collect()`, so it is
+  data from a table, not user input. It is still caught, by this check and by the loop check.
+- **On the real repos the blockers now say why.** E-commerce: 4 blocking became 1, the widget values (lines 165–166)
+  put into SQL; the three watermark queries are warnings pointing at the table read in `_utils.py`. DLT: the deploy
+  blocker names the command line (line 142). `recon.py` builds its rows as a dict filled field by field across two
+  functions; the trace stops there and the finding keeps the tool's wording and gate.

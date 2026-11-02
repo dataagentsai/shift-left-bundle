@@ -366,6 +366,7 @@ refine:
   - platform-only-import    # PLC0415 for dlt / databricks.* imported inside a function: drop
   - print-in-cli            # T201 in a script with a __main__ guard: report
   - collect-small-table     # collect() of a table matching refine_settings.small_tables: drop
+  - sql-value-source        # SL-SEC-01: trace each value put into SQL text (taint.py): untrusted input stays block and is named, table data warn, config report
 
 # Settings for the noise rules. A team adds its own small tables here.
 refine_settings:

@@ -48,3 +48,7 @@ folder and no CI. Scanned with `shiftleft scan . --stage all`, in about 3.5 seco
 - **"SQL built from variables" needs to know where the variable comes from.** Config and constants are safe; widgets,
   parameters and table values are not. The split cut 19 blockers to 4 without losing any of the sample's planted
   injection problems (sample run 7: still 97/101, 0 false alarms).
+
+## Update 3 Nov: values traced (SL-069)
+
+With `taint.py`, blocking drops from 4 to 1: `00_setup.py:173` now says "untrusted input reaches the SQL text: widget at line 165; widget at line 166". The three watermark queries are warnings that point at the table read in `_utils.py:109`.

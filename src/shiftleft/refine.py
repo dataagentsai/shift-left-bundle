@@ -13,6 +13,7 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
+from . import taint
 from .adapters._notebooks import source_sql_cells
 
 NB_HEADER = "# Databricks notebook source"
@@ -281,6 +282,48 @@ def r_collect_small_table(f, project, settings):
     return None
 
 
+_INDEX = {}
+
+
+def _index(project):
+    """One parse of every Python file in the project, shared by all findings of a run."""
+    if project not in _INDEX:
+        files = [str(p.relative_to(project)) for p in project.rglob("*.py")
+                 if not any(part in (".git", ".venv", "node_modules", "target") for part in p.parts)]
+        _INDEX.clear()
+        _INDEX[project] = taint.Index.build(project, files)
+    return _INDEX[project]
+
+
+def r_sql_value_source(f, project):
+    """SL-SEC-01: follow each value put into the SQL text to where it comes from (taint.py, up to two function hops).
+    Untrusted input (widget, command line, environment) keeps block and names the source; data read from tables
+    lowers to warn; config only lowers to report; anything not traced stays as the tool said."""
+    if f.check != "SL-SEC-01" or not f.line:
+        return None
+    ix = _index(project)
+    tree = ix.trees.get(f.file)
+    if tree is None:
+        return None
+    stmts = _nodes_at(tree, f.line, ast.stmt)
+    if not stmts:
+        return None
+    tracer = taint.Tracer(ix)
+    labels = set()
+    for expr in tracer.interpolations(stmts[0], f.file):
+        labels |= tracer.sources(expr, f.file)
+    v = taint.verdict(labels)
+    if v == "block":
+        src = sorted(f"{k} at {w}" for k, w in labels if k in taint.UNTRUSTED)
+        f.message = f"untrusted input reaches the SQL text: {'; '.join(src[:3])}. Pass it as a parameter, not text"
+        return None
+    if v == "warn":
+        src = sorted(w for k, w in labels if k == "table")
+        f.message = (f"SQL text built from values read from a table ({', '.join(src[:3])}); lower risk than user "
+                     "input, still pass them as parameters")
+    return v
+
+
 RULES = {
     "run-target-names": r_run_target_names,
     "sql-identifiers-only": r_sql_identifiers_only,
@@ -295,6 +338,7 @@ RULES = {
     "platform-only-import": r_platform_only_import,
     "print-in-cli": r_print_in_cli,
     "collect-small-table": r_collect_small_table,
+    "sql-value-source": r_sql_value_source,
 }
 WITH_SETTINGS = {r_platform_only_import, r_print_in_cli, r_collect_small_table}
 
@@ -321,6 +365,7 @@ def apply(findings, project: Path, enabled, settings=None):
     settings = settings or {}
     _text.cache_clear()
     _tree.cache_clear()
+    _INDEX.clear()
     rules = [(n, RULES[n]) for n in enabled if n in RULES]
     kept, dropped, lowered = [], collections.Counter(), collections.Counter()
     for f in findings:
@@ -336,12 +381,12 @@ def apply(findings, project: Path, enabled, settings=None):
             continue
         if verdict:
             f.gate = verdict
-            lowered[name] += 1
+            lowered[(name, verdict)] += 1
         kept.append(f)
     kept, merged = group_per_file(kept, set(settings.get("group_per_file") or []))
     notes = [f"refine {n}: dropped {c} false alarm(s)" for n, c in sorted(dropped.items())]
     notes += [f"refine group-per-file: merged {merged} finding(s) into one per file"] if merged else []
-    notes += [f"refine {n}: lowered {c} finding(s) to report" for n, c in sorted(lowered.items())]
+    notes += [f"refine {n}: lowered {c} finding(s) to {g}" for (n, g), c in sorted(lowered.items())]
     unknown = [n for n in enabled if n not in RULES]
     notes += [f"refine: unknown rule {n} in the binding; ignored" for n in unknown]
     return kept, notes
