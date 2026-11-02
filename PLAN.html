@@ -190,6 +190,21 @@ def run(spark):                                                          # impur
 </pre>
 <p>The unit test builds a three-row DataFrame on a local Spark session and compares the result with <code>assertDataFrameEqual</code>. It runs in seconds with no cluster, written as one table of cases (input rows, expected rows).</p>
 <p><b>What stays impure, on purpose:</b> reads, writes, MERGE, <code>dbutils</code>, and job entry points. These should be thin. For a MERGE, the "what to merge" logic (dedupe, SCD2 rows) is pure and only the final MERGE call is not. Values like <code>current_timestamp()</code>, <code>rand()</code> and <code>uuid()</code> make a function non-repeatable, so pass them in as parameters. Also keep actions like <code>.count()</code> and <code>.collect()</code> out of pure functions, because they make Spark run and cost money. In a Declarative Pipelines table function, the decorated function stays a one-line call to a pure function.</p>
+<h3>How do we know a function is pure?</h3>
+<p>We read its syntax tree and look for anything that touches the world outside it. Python is too dynamic to <i>prove</i> purity in every case, so the report gives three answers instead of two:</p>
+<div class="wrap"><table>
+<tr><th>Verdict</th><th>Meaning</th><th>Example</th></tr>
+<tr><td><b>impure</b></td><td>Found a side effect. The report gives the reason and the line.</td><td><code>spark.table</code>, <code>.write</code>, <code>saveAsTable</code>, <code>DeltaTable.merge</code>, <code>dbutils</code>, <code>open</code>, HTTP calls, <code>os.environ</code>, <code>datetime.now</code>, <code>random</code>, <code>F.current_timestamp()</code> / <code>rand()</code> / <code>uuid()</code>, global <code>spark</code>, changing an argument or a global, actions like <code>.collect()</code> / <code>.count()</code> / <code>.show()</code></td></tr>
+<tr><td><b>pure</b></td><td>Every call is on a known-pure list and nothing else is touched.</td><td>DataFrame methods that return a new DataFrame (<code>select</code>, <code>withColumn</code>, <code>filter</code>, <code>join</code>, <code>groupBy().agg</code>, <code>dropDuplicates</code>, <code>union</code>), most of <code>pyspark.sql.functions</code>, <code>math</code>, <code>re</code>, and other functions in the repo already found pure</td></tr>
+<tr><td><b>unknown</b></td><td>It calls something we can't see into (a library not on either list, a function passed in as an argument, <code>getattr</code> tricks). Counted as <i>not pure</i> until someone marks it.</td><td><code>some_lib.enrich(df)</code></td></tr>
+</table></div>
+<ul>
+<li><b>It follows calls.</b> If <code>clean_orders</code> calls a helper that reads a table, <code>clean_orders</code> is impure too, and the report shows the chain.</li>
+<li><b>Marking.</b> A developer can mark a function <code>@pure</code> (deal's marker). The static check still runs, so a wrong mark is reported.</li>
+<li><b>Proof at test time.</b> A pytest fixture makes Spark's read, write and catalog calls fail during unit tests of pure functions. If a "pure" function touches a table, its test fails. Each test also runs the function twice and checks that both outputs match.</li>
+<li><b>Measured, not claimed.</b> The sample repo has planted pure, impure and tricky functions with a hidden answer key, so we report how often the verdict is right.</li>
+</ul>
+<p>Build on, not from scratch: Python's <code>ast</code> for the tree, deal's list of generic side effects, and our Spark lists (reads, writes, actions, non-repeatable functions). CostLens already holds most of those Spark lists in <code>code_structure.py</code>.</p>
 <p><b>Coverage:</b> coverage.py (run through pytest-cov) measures Python and PySpark the same way, because PySpark code is Python running on the driver. It has three blind spots. Code inside Python UDFs runs in worker processes and needs extra setup to be counted. SQL text has no line coverage at all, so SQL is covered by tests that check its output. Notebooks are hard to measure, so the logic belongs in <code>.py</code> modules that thin notebooks import. The purity rule fixes all three: logic sits in pure functions in modules, where coverage works.</p>
 <h3>"What is missing" (gap report)</h3>
 <pre>SETUP
