@@ -69,7 +69,7 @@ Existence check done 2 Nov 2026, before any design. Rule: reuse what the industr
 - `azure_data_factory/`: ADF rules, a start on the Azure binding
 - `.pre-commit-hooks.yaml` with `costlens hook`
 
-**Verdict: Pursue as the cost adapter.** The bundle calls CostLens behind a port and maps its rule ids to our check ids. We don't copy its rules. Open question for the user: CostLens is a commercial product, so is its oss-core published as a package the bundle can depend on?
+**Verdict: Pursue as the cost adapter.** The bundle calls CostLens behind a port and maps its rule ids to our check ids. We don't copy its rules. Until costlens-core is published as a package, the cost adapter is optional (D2).
 
 ## The delta (what nobody ships, so we build it)
 

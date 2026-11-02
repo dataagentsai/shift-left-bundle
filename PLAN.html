@@ -34,7 +34,7 @@ svg text{font-family:"Patrick Hand",cursive}
 <main>
 <h1>Shift-Left Bundle</h1>
 <p class="lede">A light bundle that makes PySpark, Python and Databricks SQL code fail fast, before it runs. It reports cost, security, vulnerability, test and complexity problems, plus what a repo is missing. It is spec-driven like the Data Engineering and Agent Harness families: the checks name no product, and Databricks, then Azure, are bindings.</p>
-<p>Working name, started 2 Nov 2026. Status: <b>plan and reuse check only, no code yet</b>. Decisions D1–D8 at the bottom need your call.</p>
+<p>Working name, started 2 Nov 2026. Status: <b>plan and reuse check done; decisions D1–D8 agreed as recommended on 2 Nov 2026</b>. Next: spec v0.1.</p>
 <nav><a href="#lesson">1 Lesson</a><a href="#world">2 How software solved it</a><a href="#trees">3 Syntax trees</a><a href="#checks">4 Check families</a><a href="#reuse">5 Reuse</a><a href="#reports">6 Reports</a><a href="#arch">7 Design</a><a href="#plan">8 Plan</a><a href="#decide">9 Decisions</a></nav>
 
 <h2 id="lesson">1. Lesson: what "shift left" means</h2>
@@ -173,6 +173,24 @@ TESTS    pure functions untested: 17      coverage on changed lines: 64%  (gate 
 COMPLEXITY  top 3 by cognitive complexity
     gold/kpis.py:build_daily_kpis   cognitive 31  cyclomatic 18  untested   ← fix first
 </pre>
+<h3>Can PySpark code be pure? Yes, for most of the logic</h3>
+<p>Spark makes this easier than plain Python. A DataFrame never changes in place: every step returns a new DataFrame, and nothing runs until an action such as a write. So a function that takes a DataFrame and returns a DataFrame using only column expressions is pure. Same input, same output, nothing touched outside. Spark even has <code>df.transform(f)</code> to chain such functions.</p>
+<pre># Before: impure. It reads a table, uses the clock and writes, so a test needs real tables.
+def load_silver_orders():
+    df = spark.table("bronze.orders")
+    df = df.dropDuplicates(["order_id"]).withColumn("load_ts", F.lit(datetime.now()))
+    df.write.mode("append").saveAsTable("silver.orders")
+
+# After: the logic is pure; the read, clock and write sit in a thin shell.
+def clean_orders(orders: DataFrame, load_ts: datetime) -> DataFrame:      # pure: unit test this
+    return orders.dropDuplicates(["order_id"]).withColumn("load_ts", F.lit(load_ts))
+
+def run(spark):                                                          # impure shell: integration test
+    clean_orders(spark.table("bronze.orders"), datetime.now()).write.mode("append").saveAsTable("silver.orders")
+</pre>
+<p>The unit test builds a three-row DataFrame on a local Spark session and compares the result with <code>assertDataFrameEqual</code>. It runs in seconds with no cluster, written as one table of cases (input rows, expected rows).</p>
+<p><b>What stays impure, on purpose:</b> reads, writes, MERGE, <code>dbutils</code>, and job entry points. These should be thin. For a MERGE, the "what to merge" logic (dedupe, SCD2 rows) is pure and only the final MERGE call is not. Values like <code>current_timestamp()</code>, <code>rand()</code> and <code>uuid()</code> make a function non-repeatable, so pass them in as parameters. Also keep actions like <code>.count()</code> and <code>.collect()</code> out of pure functions, because they make Spark run and cost money. In a Declarative Pipelines table function, the decorated function stays a one-line call to a pure function.</p>
+<p><b>Coverage:</b> coverage.py (run through pytest-cov) measures Python and PySpark the same way, because PySpark code is Python running on the driver. It has three blind spots. Code inside Python UDFs runs in worker processes and needs extra setup to be counted. SQL text has no line coverage at all, so SQL is covered by tests that check its output. Notebooks are hard to measure, so the logic belongs in <code>.py</code> modules that thin notebooks import. The purity rule fixes all three: logic sits in pure functions in modules, where coverage works.</p>
 <h3>"What is missing" (gap report)</h3>
 <pre>SETUP
   missing  pre-commit config                    → add .pre-commit-config.yaml (template provided)
@@ -236,13 +254,13 @@ skills/         a Claude skill that reads REVIEW.md and proposes fixes (LLM only
 <tr><td>8</td><td>Azure binding (ADF, Azure DevOps), then others</td><td>later</td></tr>
 </table></div>
 
-<h2 id="decide">9. Decisions for you</h2>
+<h2 id="decide">9. Decisions (all agreed as recommended, 2 Nov 2026)</h2>
 <div class="wrap"><table>
 <tr><th>#</th><th>Question</th><th>Options</th><th>Recommendation</th></tr>
 <tr><td>D1</td><td>SonarQube?</td><td>Use it / don't, emit SARIF</td><td class="rec">Don't. SARIF lets a Sonar shop import us.</td></tr>
-<tr><td>D2</td><td>How do we use CostLens?</td><td>Depend on costlens-core oss-core as a package / copy rules in / leave it out</td><td class="rec">Depend on it behind the cost port. Needs your call on publishing oss-core, since CostLens is commercial.</td></tr>
+<tr><td>D2</td><td>How do we use CostLens?</td><td>Depend on costlens-core oss-core as a package / copy rules in / leave it out</td><td class="rec">Depend on it behind the cost port. Until costlens-core is published as a package, the cost adapter is optional and the bundle runs without it.</td></tr>
 <tr><td>D3</td><td>Where do the checks live?</td><td>Own catalog here / inside DAC in data-platform-catalog</td><td class="rec">Own catalog here, each check linked to DAC ids. DAC says what must be true; this bundle is how a repo proves it before running.</td></tr>
-<tr><td>D4</td><td>Public or private repo?</td><td>Public / private</td><td class="rec">Public, like data-project-review (it brings people to the site; CostLens stays the paid post-run side).</td></tr>
+<tr><td>D4</td><td>Public or private repo?</td><td>Public / private</td><td class="rec">Public, like data-project-review.</td></tr>
 <tr><td>D5</td><td>Gate policy at start</td><td>Block everything / block security + secrets + cartesian, warn the rest, baseline old code</td><td class="rec">Second. Noise kills adoption.</td></tr>
 <tr><td>D6</td><td>Purity report in v0?</td><td>Yes / later</td><td class="rec">Yes. It is the new idea, and it drives the test advice.</td></tr>
 <tr><td>D7</td><td>Coverage gate</td><td>Whole repo / changed lines only</td><td class="rec">Changed lines, 80%, with mutation score nightly on pure functions only.</td></tr>
