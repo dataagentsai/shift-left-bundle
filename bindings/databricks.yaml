@@ -32,6 +32,9 @@ tools:
   mv-explain: {licence: Databricks SQL, kind: EXPLAIN CREATE MATERIALIZED VIEW on a dev warehouse (Runtime 17.3+), pre-deploy}
   metricview: {licence: ours, kind: extract metric view YAML, validate against the YAML spec 1.1 schema, parse expressions with sqlglot}
   repo-checks: {licence: ours, kind: built-in repository checks (what is missing, unpinned libraries, notebook installs); to move onto repo-review plugins in Tier 5}
+  bundle-rules: {licence: ours, kind: bundle config rules CostLens lacks (tags, timeouts, worker limits, cluster autotermination)}
+  sparkdoctor: {licence: Apache-2.0, kind: PySpark lint with JSON output; adopted after the trial on the sample (2 Nov 2026), mapped rules only}
+  pyspark-antipattern: {licence: MIT, kind: PySpark lint; only S011 and F019 adopted (others overlap or are opinions that hit traps)}
   test-kit: {licence: ours, kind: standard case tables for known data patterns (SCD2, dedupe, incremental, late data)}
   pip-licenses: {licence: MIT, kind: licence list}
   coverage: {licence: Apache-2.0, kind: coverage.py with pytest-cov and diff-cover}
@@ -50,16 +53,16 @@ checks:
   SL-COST-CODE-01: {tool: costlens, rules: [to_pandas_without_limit], status: cost, note: "collect() without limit is a build gap in costlens; add an Opengrep rule"}
   SL-COST-CODE-02: {tool: costlens, rules: [loop_calling_spark_sql, loop_calling_spark_read, code_spark_action_inside_loop], status: cost}
   SL-COST-CODE-03: {tool: costlens, rules: [collect_in_for_loop], status: cost}
-  SL-COST-CODE-04: {tool: opengrep, rules: [sl-python-udf-for-builtin], status: build, note: "costlens udf_proliferation counts UDFs per file; this needs a per-UDF rule. Trial: pyspark-antipattern, SparkDoctor"}
-  SL-COST-CODE-05: {tool: opengrep, rules: [sl-withcolumn-in-loop], status: trial, note: "cylint and pyspark-antipattern have this; adopt one if it scores well"}
-  SL-COST-CODE-06: {tool: opengrep, rules: [sl-count-for-emptiness], status: build, note: "df.count() == 0 / > 0; prefer df.isEmpty() (PySpark 3.3+)"}
+  SL-COST-CODE-04: {tool: sparkdoctor, rules: [SDK005], status: adopt, note: "flags every Python UDF; the catalog check is narrower (a built-in exists). Trial result 2 Nov 2026"}
+  SL-COST-CODE-05: {tool: sparkdoctor, rules: [SDK004], status: adopt, note: "pyspark-antipattern L003 and cylint CY003 do the same"}
+  SL-COST-CODE-06: {tool: sparkdoctor, rules: [SDK003], status: adopt}
   SL-COST-CODE-07: {tool: costlens, rules: [code_persist_without_unpersist], status: cost}
   SL-COST-CODE-08: {tool: costlens, rules: [multi_read_same_table], status: cost}
   SL-COST-CODE-09: {tool: costlens, rules: [code_hardcoded_repartition_debug_value], status: cost, note: "covers repartition(1)/coalesce(1)"}
   SL-COST-CODE-10: {tool: costlens, rules: [broadcast_in_loop], status: cost}
   SL-COST-CODE-11: {tool: costlens, rules: [code_spark_action_result_discarded], status: cost, note: "show(), display(), count() whose result is unused"}
-  SL-COST-CODE-12: {tool: opengrep, rules: [sl-infer-schema], status: build, note: "inferSchema=true, or read without .schema(); costlens auto_loader_inferred_schema_no_location covers Auto Loader"}
-  SL-COST-CODE-13: {tool: costlens, rules: [select_star, select_distinct_star], status: cost}
+  SL-COST-CODE-12: {tool: pyspark-antipattern, rules: [F019], status: adopt, note: "costlens auto_loader_inferred_schema_no_location covers Auto Loader"}
+  SL-COST-CODE-13: {tool: sqlfluff, rules: [AM04], status: adopt, note: "AM04 knows the columns of a CTE; costlens select_star flags every SELECT * (false alarm on the sample, run 2), so it is not mapped"}
   SL-COST-CODE-14: {tool: costlens, rules: [cross_join], status: cost, note: "sqlfluff AM05 (implicit or explicit join type) helps too"}
   SL-COST-CODE-15: {tool: costlens, rules: [function_on_partition_column, implicit_type_cast_on_filter, non_sargable_predicate], status: cost}
   SL-COST-CODE-16: {tool: costlens, rules: [merge_without_partition_predicate], status: cost}
@@ -76,14 +79,14 @@ checks:
   SL-COST-PLAN-05: {tool: costlens, rules: [wide_stage_count], status: cost}
   SL-COST-PLAN-06: {tool: plan-harness, rules: [repeated-scan], status: build, note: "costlens repeated_table_scan works on SQL text; this is the plan-level version"}
   # ---- cost in job and compute config (databricks.yml, resources/*.yml)
-  SL-COST-CONFIG-01: {tool: costlens, rules: [cluster_no_autotermination], status: cost}
+  SL-COST-CONFIG-01: {tool: costlens, rules: [cluster_no_autotermination], status: cost, note: "bundle-rules also checks resources.clusters (cluster-no-autotermination)"}
   SL-COST-CONFIG-02: {tool: costlens, rules: [job_on_existing_cluster], status: cost}
-  SL-COST-CONFIG-03: {tool: repo-review, rules: [sl-dab-cost-tags], status: build, note: "custom_tags on job_clusters and tags on jobs; names come from the team's config"}
-  SL-COST-CONFIG-04: {tool: costlens, rules: [oversized_autoscale_max], status: cost, note: "also flag autoscale with no max_workers"}
+  SL-COST-CONFIG-03: {tool: bundle-rules, rules: [job-no-tags, cluster-no-tags], status: build}
+  SL-COST-CONFIG-04: {tool: costlens, rules: [oversized_autoscale_max], status: cost, note: "bundle-rules also flags autoscale with no max_workers (autoscale-no-max)"}
   SL-COST-CONFIG-05: {tool: costlens, rules: [dlt_continuous_for_batch_workload], status: cost}
-  SL-COST-CONFIG-06: {tool: costlens, rules: [cron_too_frequent], status: cost, note: "needs the freshness target from the data contract to compare against"}
+  SL-COST-CONFIG-06: {tool: costlens, rules: [cron_too_frequent], status: cost, note: "sqlglot mv-schedule covers materialized views; needs the freshness target from the data contract to be exact"}
   SL-COST-CONFIG-07: {tool: repo-review, rules: [sl-dab-dev-target-size], status: build, note: "compare targets.dev overrides with targets.prod"}
-  SL-COST-CONFIG-08: {tool: repo-review, rules: [sl-dab-job-timeout], status: build, note: "timeout_seconds on every job and task"}
+  SL-COST-CONFIG-08: {tool: bundle-rules, rules: [job-no-timeout], status: build}
   # ---- unsafe code
   SL-SEC-01: {tool: ruff, rules: [S608], status: adopt, note: "plus an Opengrep rule for spark.sql(f'...'); fix is spark.sql(query, args={...}) (PySpark 3.4+)"}
   SL-SEC-02: {tool: ruff, rules: [S307, S102], status: adopt}
@@ -92,7 +95,7 @@ checks:
   SL-SEC-05: {tool: ruff, rules: [S602, S605], status: adopt}
   SL-SEC-06: {tool: opengrep, rules: [sl-secret-printed], status: build, note: "print/log of dbutils.secrets.get(...)"}
   SL-SEC-07: {tool: opengrep, rules: [sl-pii-sample-logged], status: build, note: "show()/display() on tables whose columns are tagged personal in the contract; report only, noisy by nature"}
-  SL-SEC-08: {tool: sqlglot, rules: [sl-grant-all-or-everyone], status: build, note: "GRANT ALL PRIVILEGES, or GRANT to `account users` / `users`"}
+  SL-SEC-08: {tool: sqlglot, rules: [grant-broad], status: build, note: "GRANT ALL PRIVILEGES, or GRANT to `account users` / `users`; also inside %sql cells"}
   # ---- secrets
   SL-SECRET-01: {tool: gitleaks, rules: [gitleaks default rules, sl-databricks-pat], status: adopt, note: "add a rule for Databricks tokens (dapi...) if the default set lacks one"}
   SL-SECRET-02: {tool: gitleaks, rules: [git history scan], status: adopt}
@@ -136,7 +139,7 @@ checks:
   # ---- added in 0.2.0
   SL-COST-CODE-22: {tool: sqlglot, rules: [sl-mv-nondeterministic], status: build, note: "rand(), uuid() and similar in the MV query; time functions allowed only in WHERE per the incremental-refresh docs (checked 2 Nov 2026)"}
   SL-COST-CODE-23: {tool: sqlglot, rules: [sl-mv-chain-depth], status: build}
-  SL-COST-CONFIG-09: {tool: mv-explain, rules: [EXPLAIN CREATE MATERIALIZED VIEW], status: adopt, note: "not offline: a few seconds on a dev warehouse before deploy"}
+  SL-COST-CONFIG-09: {tool: mv-explain, rules: [EXPLAIN CREATE MATERIALIZED VIEW], status: adopt, note: "not offline: a few seconds on a dev warehouse before deploy. sqlglot mv-not-incremental gives the offline early warning"}
   SL-COST-CONFIG-10: {tool: repo-review, rules: [sl-mv-strict-policy-in-dev], status: build, note: "REFRESH POLICY INCREMENTAL STRICT in the dev target"}
   SL-SEC-09: {tool: nbstripout, rules: [--verify], status: adopt}
   SL-SEC-10: {tool: ruff, rules: [S], status: adopt, note: "every S rule not mapped to SL-SEC-01..05 (see ruff_map)"}
@@ -163,7 +166,7 @@ checks:
   SL-CLEAN-22: {tool: ruff, rules: [PD, NPY], status: adopt}
   SL-CLEAN-23: {tool: opengrep, rules: [sl-notebook-run-chain], status: build, note: "%run and dbutils.notebook.run used to pull in definitions"}
   SL-CLEAN-24: {tool: ruff, rules: [FIX, TD], status: adopt}
-  SL-CLEAN-25: {tool: opengrep, rules: [sl-long-method-chain], status: build, note: "Palantir PySpark style guide"}
+  SL-CLEAN-25: {tool: sparkdoctor, rules: [SDK009], status: adopt}
   SL-CLEAN-26: {tool: opengrep, rules: [sl-inline-complex-condition], status: build, note: "Palantir PySpark style guide"}
   SL-CLEAN-27: {tool: dbt-bouncer, rules: [check_model_has_no_hardcoded_references], status: adopt, note: "or dbt-project-evaluator fct_hard_coded_references; confirm in Tier 3"}
   SL-CLEAN-28: {tool: dbt-project-evaluator, rules: [fct_direct_join_to_source, fct_marts_or_intermediate_dependent_on_source, fct_staging_dependent_on_staging], status: trial}
@@ -204,6 +207,23 @@ sqlfluff_map:
   AM02: SL-COST-CODE-18     # bare UNION removes duplicates with a full shuffle
   AM04: SL-COST-CODE-13     # SELECT * (unknown number of result columns)
   AM08: SL-COST-CODE-14     # implicit cross join
+
+# PySpark linters, adopted after the trial on the sample (tests/RESULTS.md, run 2). Rules not listed are ignored.
+sparkdoctor_map:
+  SDK002: SL-COST-CODE-01   # collect() without a limit
+  SDK003: SL-COST-CODE-06   # count() to test emptiness
+  SDK004: SL-COST-CODE-05   # withColumn() in a loop
+  SDK005: SL-COST-CODE-04   # Python UDF
+  SDK006: SL-COST-CODE-09   # repartition(1)
+  SDK009: SL-CLEAN-25       # long transformation chain
+  SDK012: SL-COST-CODE-01   # toPandas() without a limit
+  SDK016: SL-COST-CODE-14   # crossJoin()
+  SDK023: SL-COST-CODE-11   # show() left in code
+  SDK026: SL-SEC-01         # spark.sql() with a dynamic string
+  SDK031: SL-COST-CODE-03   # collect() inside a loop
+pyspark_antipattern_map:
+  S011: SL-COST-CODE-14     # DataFrame join with no condition
+  F019: SL-COST-CODE-12     # inferSchema / mergeSchema
 
 # Every Ruff finding is reported under one catalog check. Most specific match wins: full code, then prefix.
 ruff_map:

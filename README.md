@@ -4,12 +4,13 @@ Fail fast on PySpark, Python and Databricks SQL code before it runs: cost, secur
 
 Guide: <https://cleandataengineering.ai/learn/shift-left/>
 
-**Status:** the spec (0.2) is written: 131 checks in 13 families, for Python, PySpark, notebooks, SQL, dbt, materialized views and metric views. `examples/scd2` shows SCD2, idempotency, duplicates, dropped records and cartesian joins tested offline. `examples/sample-project` is a shop with 101 planted problems and 16 traps; `scripts/score.py` scores any run against the hidden key (`tests/RESULTS.md`). The runner works: `shiftleft scan PATH --stage pr` (34 of 101 caught on the sample, no false alarms; see below). See `TODO.md`.
+**Status:** the spec (0.2) is written: 131 checks in 13 families, for Python, PySpark, notebooks, SQL, dbt, materialized views and metric views. `examples/scd2` shows SCD2, idempotency, duplicates, dropped records and cartesian joins tested offline. `examples/sample-project` is a shop with 101 planted problems and 16 traps; `scripts/score.py` scores any run against the hidden key (`tests/RESULTS.md`). The runner works: `shiftleft scan PATH --stage pr` (64 of 101 caught on the sample, no false alarms; see below). See `TODO.md`.
 
 ## Use it
 
 ```
 pip install "shiftleft[tools] @ git+https://github.com/dataagentsai/shift-left-bundle"   # gitleaks and osv-scanner: install separately
+pip install sparkdoctor==0.1.8 pyspark-antipattern==0.4.1                            # optional PySpark rules; costlens-core optional too
 shiftleft scan . --stage pr --sarif shiftleft.sarif --md shiftleft-review.md          # exit 1 if a blocking finding is new
 shiftleft baseline . --out .shiftleft-baseline.json                                   # adopt on an existing repo
 shiftleft scan . --stage pr --baseline .shiftleft-baseline.json

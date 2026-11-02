@@ -2,12 +2,12 @@
 name = "shiftleft"
 version = "0.1.0.dev0"
 description = "Fail fast on PySpark, Python and Databricks SQL before it runs: one runner over open-source checkers, findings under one catalog of checks."
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "Apache-2.0"
 dependencies = ["pyyaml>=6"]
 
 [project.optional-dependencies]
-tools = ["ruff==0.17.3", "sqlfluff==4.5.0", "vulture==2.16", "complexipy==8.3.0", "nbstripout==0.9.1", "pip-audit==2.10.1"]
+tools = ["ruff==0.17.3", "sqlfluff==4.5.0", "vulture==2.16", "complexipy==8.3.0", "nbstripout==0.9.1", "pip-audit==2.10.1", "sparkdoctor==0.1.8", "pyspark-antipattern==0.4.1"]
 
 [project.scripts]
 shiftleft = "shiftleft.cli:main"

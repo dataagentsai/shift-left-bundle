@@ -34,7 +34,7 @@ svg text{font-family:"Patrick Hand",cursive}
 <main>
 <h1>Shift-Left Bundle</h1>
 <p class="lede">A light bundle that makes PySpark, Python and Databricks SQL code fail fast, before it runs. It reports cost, security, vulnerability, test and complexity problems, plus what a repo is missing. It is spec-driven like the Data Engineering and Agent Harness families: the checks name no product, and Databricks, then Azure, are bindings.</p>
-<p>Working name, started 2 Nov 2026. Status: <b>plan and reuse check done; decisions D1–D8 agreed as recommended on 2 Nov 2026</b>. Spec 0.2 done 2 Nov 2026: 131 checks in 13 families, covering Python, PySpark, notebooks, SQL, dbt, materialized views and metric views (catalog/INDEX.md). Tier 2 done 2 Nov: a sample shop with 101 planted problems and 16 traps; Ruff alone catches 17 (tests/RESULTS.md). Tier 3 done 2 Nov: one runner over 8 tools catches 34 of 101 with no false alarms, in under 8 seconds. Next: Tier 4, the cost rules.</p>
+<p>Working name, started 2 Nov 2026. Status: <b>plan and reuse check done; decisions D1–D8 agreed as recommended on 2 Nov 2026</b>. Spec 0.2 done 2 Nov 2026: 131 checks in 13 families, covering Python, PySpark, notebooks, SQL, dbt, materialized views and metric views (catalog/INDEX.md). Tier 2 done 2 Nov: a sample shop with 101 planted problems and 16 traps; Ruff alone catches 17 (tests/RESULTS.md). Tier 3 done 2 Nov: one runner over 8 tools catches 34 of 101 with no false alarms, in under 8 seconds. Tier 4 done 2 Nov: CostLens cost rules, SparkDoctor and our own SQL and bundle rules bring it to 64 of 101, still with no false alarms. Next: Tier 5, what we build ourselves.</p>
 <nav><a href="#lesson">1 Lesson</a><a href="#world">2 How software solved it</a><a href="#trees">3 Syntax trees</a><a href="#checks">4 Check families</a><a href="#reuse">5 Reuse</a><a href="#reports">6 Reports</a><a href="#arch">7 Design</a><a href="#plan">8 Plan</a><a href="#decide">9 Decisions</a></nav>
 
 <h2 id="lesson">1. Lesson: what "shift left" means</h2>
@@ -264,8 +264,8 @@ skills/         a Claude skill that reads REVIEW.md and proposes fixes (LLM only
 <tr><td>1b</td><td>Spec 0.2: notebooks, dbt, materialized and metric views (SEM family), clean code to 37 habits on 404/600 Ruff rules, osv-scanner, SCD2 example with test kit, CI and container templates</td><td>done 2 Nov</td></tr>
 <tr><td>2</td><td>Proof material: sample repo, planted problems, false-positive traps, hidden answer key, scoring</td><td>done 2 Nov</td></tr>
 <tr><td>3</td><td>Off-the-shelf tools through one runner (Ruff, SQLFluff, sqlglot, Opengrep, gitleaks, pip-audit, coverage, complexipy…), SARIF, gate + baseline, run 1</td><td>done 2 Nov</td></tr>
-<tr><td>4</td><td>Cost adapter: existing CostLens cost rules behind the cost port; trial young PySpark linters; add CartesianProduct and Python UDF plan rules</td><td>next</td></tr>
-<tr><td>5</td><td>The delta: purity report, test-time purity fixture, empty-table plan harness, gap report, joined view, run 2</td><td>later</td></tr>
+<tr><td>4</td><td>Cost adapter: existing CostLens cost rules behind the cost port; trial young PySpark linters; add CartesianProduct and Python UDF plan rules</td><td>done 2 Nov</td></tr>
+<tr><td>5</td><td>The delta: purity report, test-time purity fixture, empty-table plan harness, gap report, joined view, run 2</td><td>next</td></tr>
 <tr><td>6</td><td>Real repo run, cut noise, feed back, run 3</td><td>later</td></tr>
 <tr><td>7</td><td>Teach and release (alongside): site guide, Claude skill, CI templates, v0.1 tag</td><td>alongside</td></tr>
 <tr><td>8</td><td>Azure binding; split catalog repo when stable</td><td>later</td></tr>

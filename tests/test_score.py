@@ -17,6 +17,7 @@ KEY = {
         {"id": "P1", "check": "SL-SEC-01", "file": "a.py", "anchor": "x", "line": 10},
         {"id": "P2", "check": "SL-TEST-03", "file": "b.py", "anchor": None, "line": None},
         {"id": "P3", "check": "SL-SETUP-01", "file": ".", "anchor": None, "line": None},
+        {"id": "P4", "check": "SL-SEC-01", "file": "a.py", "anchor": "z", "line": 37},
     ],
     "traps": [{"id": "T1", "checks": ["SL-SEC-01"], "file": "a.py", "anchor": "y", "line": 40}],
 }
@@ -33,6 +34,8 @@ CASES = [
     ("repo entry", [{"check": "SL-SETUP-01", "file": ".", "line": None}], 1, 1, 0, 0),
     ("trap hit", [{"check": "SL-SEC-01", "file": "a.py", "line": 41}], 0, 0, 1, 0),
     ("other check on a trap is not a false alarm", [{"check": "SL-CLEAN-01", "file": "a.py", "line": 40}], 0, 0, 0, 1),
+    ("finding near a trap but on its planted line is not a false alarm",
+     [{"check": "SL-SEC-01", "file": "a.py", "line": 38}], 1, 1, 0, 0),
     ("duplicate findings count once", [{"check": "SL-SEC-01", "file": "a.py", "line": 10}] * 2, 1, 1, 0, 0),
 ]
 

@@ -13,8 +13,8 @@ except Tier 7 (teaching), which runs alongside.
 | 1b | Spec 0.2: notebooks, dbt, materialized views, metric views (new SEM family), 20 more clean-code habits, Ruff profiles (404 / 600 rules), osv-scanner; SCD2 example with test kit; CI and container templates | done 2 Nov: 131 checks, 51 lint tests, example 27 tests |
 | 2 | Proof material: sample repo with planted problems and a hidden answer key | done 2 Nov: 101 planted, 16 traps; run 0 (Ruff only) 17/101, 0 false alarms |
 | 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | done 2 Nov: 8 adapters, run 1 = 34/101, 0 false alarms, hook and baseline proven |
-| 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | next |
-| 5 | The delta: purity report, empty-table plan harness, gap report | later |
+| 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | done 2 Nov: run 2 = 64/101, 0 false alarms |
+| 5 | The delta: purity report, empty-table plan harness, gap report | next |
 | 6 | Real repo, cut the noise, run 2 | later |
 | 7 | Teach and release: site pages, Claude skill, v0.1 tag | alongside |
 | 8 | Azure binding | later |
@@ -78,9 +78,9 @@ except Tier 7 (teaching), which runs alongside.
 
 | Id | Task | Status |
 |---|---|---|
-| SL-040 | Existing cost rules (CostLens oss-core: SQL, Python, plan, bundle config) behind the cost port; map their rule ids to our check ids; optional until published as a package | — |
-| SL-041 | Trial pyspark-antipattern and SparkDoctor on the sample; keep only rules the existing set lacks | — |
-| SL-042 | Add missing plan rules: CartesianProduct, Python UDF evaluation (from CostIntelligence1) | — |
+| SL-040 | Existing cost rules (CostLens oss-core: SQL, Python, plan, bundle config) behind the cost port; map their rule ids to our check ids; optional until published as a package | done 2 Nov: costlens adapter (optional import), bundle includes merged, notebook %sql cells extracted, keyword line lookup; select_star left unmapped (false alarm) |
+| SL-041 | Trial pyspark-antipattern and SparkDoctor on the sample; keep only rules the existing set lacks | done 2 Nov: SparkDoctor adopted (11 rules), pyspark-antipattern (2 rules), cylint dropped (REUSE.md) |
+| SL-042 | Add missing plan rules: CartesianProduct, Python UDF evaluation (from CostIntelligence1) | moved to Tier 5: plan rules need the empty-table harness (SL-052) |
 
 ## Tier 5: the delta
 

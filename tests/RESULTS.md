@@ -9,8 +9,9 @@ Score any run with `uv run scripts/score.py findings.json`.
 | 0 | 2 Nov 2026 | Ruff 0.17.3, starter profile, default settings | 17/101 | 19/101 | 0/16 | 33 |
 | 0b | 2 Nov 2026 | Ruff 0.17.3, starter profile, `templates/ruff.toml` | 17/101 | 19/101 | 0/16 | 8 |
 | 1 | 2 Nov 2026 | `shiftleft scan --stage all`: Ruff, SQLFluff, gitleaks (+ our rules), osv-scanner, vulture, complexipy, nbstripout, repo checks | 34/101 | 39/101 | 0/16 | 56 |
+| 2 | 2 Nov 2026 | run 1 + CostLens oss-core, SparkDoctor and 2 pyspark-antipattern rules, our materialized-view, grant and bundle rules, notebook %sql extraction | 64/101 | 66/101 | 0/16 | 65 |
 
-Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`. Run 1 took under 8 seconds on a laptop.
+Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
 
 ## What run 0 taught us
 
@@ -38,3 +39,19 @@ Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-run
   These are Tiers 4 and 5.
 - **Baseline works**: on a copy of the sample, recording 58 findings let the repo pass; a new `eval` then blocked.
 - **The pre-commit hook works end to end** (`pre-commit try-repo`): it installed the bundle and blocked the commit.
+
+## What run 2 taught us
+
+- **Cost in code went from 2 of 24 to 22 of 24, job config from 0 of 9 to 8 of 9**, with no false alarms.
+- **CostLens needed three things around it, none inside it**: it reads only the root `databricks.yml` (the adapter
+  merges `include:` files first), it does not read `%sql` cells in Databricks source notebooks (the bundle extracts
+  them and sends them to CostLens and SQLFluff), and its SQL findings carry no line (the adapter finds the keyword).
+- **CostLens `select_star` flags every `SELECT *`**, including one over a three-column CTE (trap T04). SQLFluff AM04
+  knows the CTE's columns, so SL-COST-CODE-13 comes from SQLFluff and `select_star` is left unmapped.
+- **Young PySpark linters**: SparkDoctor adopted for 11 mapped rules; pyspark-antipattern for 2; cylint dropped (all
+  duplicates). Unmapped rules are ignored and counted in a note, so their noise never reaches a pull request.
+- **The scorer gave a correct finding next to a trap to both.** It now gives each finding to its nearest key entry,
+  and ignores suppressed and baselined findings.
+- **Still missing, as planned**: plans (needs the empty-table harness), purity, tests, metric views, dbt structure.
+  That is Tier 5. Two left in cost: a SELECT * inside an f-string query (no tool reads f-strings) and the
+  dependency-runtime match (SL-DEP-05).

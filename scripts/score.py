@@ -63,6 +63,7 @@ def load_findings(path):
                 out.append({"check": r.get("ruleId"), "file": loc.get("artifactLocation", {}).get("uri", "."),
                             "line": loc.get("region", {}).get("startLine")})
         data = out
+    data = [f for f in data if f.get("status", "new") == "new"]       # suppressed and baselined findings are not claims
     for f in data:
         f["file"] = (f.get("file") or ".").removeprefix(PREFIX)
     return data
@@ -77,26 +78,47 @@ def hits(entry_file, entry_line, f, window):
 
 
 def score(key, findings):
+    """Each finding is given to its nearest key entry (planted or trap) with the same check, so a correct
+    finding next to a trap is not also counted as a false alarm. Ties go to the planted entry."""
     w = key["match"]["line_window"]
-    used = set()
+
+    def dist(entry, f):
+        if not hits(entry["file"], entry["line"], f, w):
+            return None
+        return 0 if entry["line"] is None or f.get("line") is None else abs(f["line"] - entry["line"])
+
+    owner = {}
+    for i, f in enumerate(findings):
+        best = None
+        for e in key["planted"]:
+            d = dist(e, f) if f["check"] == e["check"] else None
+            if d is not None and (best is None or d < best[0]):
+                best = (d, 0, ("P", e["id"]))
+        for t in key["traps"]:
+            d = dist(t, f) if f["check"] in t["checks"] else None
+            if d is not None and (best is None or (d, 1) < best[:2]):
+                best = (d, 1, ("T", t["id"]))
+        if best:
+            owner[i] = best[2]
     rows = defaultdict(lambda: {"planted": 0, "strict": 0, "lenient": 0})
+    caught = {v[1] for v in owner.values() if v[0] == "P"}
+    used = set(owner)
     missed = []
     for e in key["planted"]:
         r = rows[family(e["check"])]
         r["planted"] += 1
-        strict = [i for i, f in enumerate(findings) if f["check"] == e["check"] and hits(e["file"], e["line"], f, w)]
-        lenient = [i for i, f in enumerate(findings) if family(f["check"]) == family(e["check"]) and hits(e["file"], e["line"], f, w)]
-        used.update(strict or lenient)
-        r["strict"] += bool(strict)
-        r["lenient"] += bool(strict or lenient)
+        strict = e["id"] in caught
+        lenient = strict or any(family(f["check"]) == family(e["check"]) and hits(e["file"], e["line"], f, w)
+                                for f in findings)
+        if lenient and not strict:
+            used.update(i for i, f in enumerate(findings) if i not in owner and family(f["check"]) == family(e["check"])
+                        and hits(e["file"], e["line"], f, w))
+        r["strict"] += strict
+        r["lenient"] += lenient
         if not strict:
             missed.append(e)
-    trap_hits = []
-    for t in key["traps"]:
-        bad = [i for i, f in enumerate(findings) if f["check"] in t["checks"] and hits(t["file"], t["line"], f, w)]
-        used.update(bad)
-        if bad:
-            trap_hits.append(t)
+    hit_traps = {v[1] for v in owner.values() if v[0] == "T"}
+    trap_hits = [t for t in key["traps"] if t["id"] in hit_traps]
     unplanned = [f for i, f in enumerate(findings) if i not in used]
     return {"by_family": dict(rows), "missed": missed, "trap_hits": trap_hits, "unplanned": unplanned,
             "planted": len(key["planted"]), "strict": sum(r["strict"] for r in rows.values()),

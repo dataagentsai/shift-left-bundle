@@ -104,3 +104,11 @@ Existence check done 2 Nov 2026, before any design. Rule: reuse what the industr
 | Pynguin | Automated unit-test generation for Python | MIT, 0.48.0 Oct 2026 | **Trial** | Research tool; expect weak results on DataFrame code. |
 
 Ruff 0.17.3 has 973 rules (832 stable) from 60 linters. Starter profile 404 rules, strict 600 (bindings/databricks.yaml).
+
+## Trial of the young PySpark linters (2 Nov 2026, on the sample; SL-041)
+
+| Tool | Findings on the sample | Verdict | Reason |
+|---|---|---|---|
+| SparkDoctor 0.1.8 | 26 | **Adopt (mapped rules only)** | JSON output, Apache-2.0. Adds count-to-test-emptiness, withColumn in a loop, Python UDF, long chains, collect in a loop. Its magic-literal rule (11 findings) is not mapped. |
+| pyspark-antipattern 0.4.1 | 37 | **Adopt two rules** | S011 (join with no condition) and F019 (inferSchema) add coverage. Many other rules are opinions (avoid spark.sql, avoid collect, avoid drop) and two hit traps. Text output only, written to stderr. |
+| cylint 0.1.5 | 10 | **Drop** | Every finding duplicates SparkDoctor or pyspark-antipattern. |
