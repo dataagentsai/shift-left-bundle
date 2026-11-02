@@ -1,0 +1,22 @@
+# Use from a team repo's .pre-commit-config.yaml:
+#   - repo: https://github.com/dataagentsai/shift-left-bundle
+#     rev: v0.1.0
+#     hooks: [{id: shiftleft-commit}]
+# Non-Python tools (gitleaks, osv-scanner) must be on PATH; if they are not, the report says so and their checks are skipped.
+- id: shiftleft-commit
+  name: shiftleft (commit checks)
+  description: Fast checks on commit for PySpark, Python, SQL, notebooks and Databricks config.
+  entry: shiftleft scan . --stage commit --md .shiftleft-review.md
+  language: python
+  pass_filenames: false
+  always_run: true
+  additional_dependencies: ["ruff==0.17.3", "sqlfluff==4.5.0", "complexipy==8.3.0", "nbstripout==0.9.1"]
+- id: shiftleft-pr
+  name: shiftleft (pull-request checks)
+  description: The full pull-request set; use in CI.
+  entry: shiftleft scan . --stage pr --sarif shiftleft.sarif --md shiftleft-review.md
+  language: python
+  pass_filenames: false
+  always_run: true
+  stages: [manual]
+  additional_dependencies: ["ruff==0.17.3", "sqlfluff==4.5.0", "vulture==2.16", "complexipy==8.3.0", "nbstripout==0.9.1"]

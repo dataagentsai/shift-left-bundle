@@ -31,6 +31,7 @@ tools:
   dbt-project-evaluator: {licence: Apache-2.0, kind: dbt Labs DAG best-practice rules; 1.x builds in the warehouse, so trial only}
   mv-explain: {licence: Databricks SQL, kind: EXPLAIN CREATE MATERIALIZED VIEW on a dev warehouse (Runtime 17.3+), pre-deploy}
   metricview: {licence: ours, kind: extract metric view YAML, validate against the YAML spec 1.1 schema, parse expressions with sqlglot}
+  repo-checks: {licence: ours, kind: built-in repository checks (what is missing, unpinned libraries, notebook installs); to move onto repo-review plugins in Tier 5}
   test-kit: {licence: ours, kind: standard case tables for known data patterns (SCD2, dedupe, incremental, late data)}
   pip-licenses: {licence: MIT, kind: licence list}
   coverage: {licence: Apache-2.0, kind: coverage.py with pytest-cov and diff-cover}
@@ -98,7 +99,7 @@ checks:
   SL-SECRET-03: {tool: opengrep, rules: [sl-credential-in-config], status: build, note: "password/token keys with literal values in *.yml, *.json, *.conf; allow {{secrets/scope/key}} references"}
   # ---- dependencies
   SL-DEP-01: {tool: osv-scanner, rules: [OSV database, lockfile scan], status: adopt, note: "pip-audit as fallback for repos with no lockfile"}
-  SL-DEP-02: {tool: repo-review, rules: [sl-lockfile-present], status: build, note: "uv.lock, poetry.lock or fully pinned requirements"}
+  SL-DEP-02: {tool: repo-checks, rules: [unpinned], status: build, note: "requirements lines without ==, and no lockfile"}
   SL-DEP-03: {tool: pip-licenses, rules: [allow-list], status: trial}
   SL-DEP-04: {tool: repo-review, rules: [sl-unmaintained-dependency], status: build, note: "last release date from the PyPI JSON API"}
   SL-DEP-05: {tool: repo-review, rules: [sl-runtime-match], status: build, note: "compare test pins (pyspark, python) with spark_version in databricks.yml, using the Databricks Runtime release notes table"}
@@ -121,7 +122,7 @@ checks:
   SL-CPLX-01: {tool: ruff, rules: [C901], status: adopt}
   SL-CPLX-02: {tool: complexipy, rules: [cognitive complexity], status: adopt}
   SL-CPLX-03: {tool: ruff, rules: [PLR0915], status: adopt}
-  SL-CPLX-04: {tool: vulture, rules: [unused code], status: adopt}
+  SL-CPLX-04: {tool: vulture, rules: [unused function, unused class, unreachable code], status: adopt, note: "run 1 (2 Nov): 28 findings, 1 planted; a library's public functions look unused because jobs call them from config. Nightly report until entry points are read from databricks.yml (SL-058)"}
   SL-CPLX-05: {tool: pylint, rules: [R0801], status: trial, note: "or jscpd; pick on the sample"}
   # ---- clean code
   SL-CLEAN-01: {tool: ruff, rules: [RET505, RET506, RET507, RET508, SIM102, PLR1702], status: adopt, note: "checked 2 Nov 2026: RET505 fires on the nested discount example"}
@@ -139,7 +140,7 @@ checks:
   SL-COST-CONFIG-10: {tool: repo-review, rules: [sl-mv-strict-policy-in-dev], status: build, note: "REFRESH POLICY INCREMENTAL STRICT in the dev target"}
   SL-SEC-09: {tool: nbstripout, rules: [--verify], status: adopt}
   SL-SEC-10: {tool: ruff, rules: [S], status: adopt, note: "every S rule not mapped to SL-SEC-01..05 (see ruff_map)"}
-  SL-DEP-06: {tool: opengrep, rules: [sl-pip-install-in-notebook], status: build, note: "%pip install / MAGIC %pip without ==version"}
+  SL-DEP-06: {tool: repo-checks, rules: [pip-in-notebook], status: build, note: "%pip install / MAGIC %pip without ==version"}
   SL-TEST-07: {tool: dbt-bouncer, rules: [check_model_has_unique_test], status: adopt, note: "check name to confirm against dbt-bouncer docs in Tier 3"}
   SL-TEST-08: {tool: dbt-bouncer, rules: [check_model_has_unit_tests], status: adopt, note: "check name to confirm in Tier 3"}
   SL-TEST-09: {tool: test-kit, rules: [scd2, dedupe, incremental, late-data], status: build}
@@ -180,14 +181,14 @@ checks:
   SL-STYLE-03: {tool: sqlfluff, rules: [core rules, dialect databricks], status: adopt, note: "%sql cells and spark.sql strings extracted first (costlens inputs/notebook.py, inputs/python_source.py)"}
   SL-STYLE-04: {tool: ruff, rules: [N], status: adopt}
   # ---- setup
-  SL-SETUP-01: {tool: repo-review, rules: [PC100], status: adopt, note: "sp-repo-review: has .pre-commit-config.yaml"}
-  SL-SETUP-02: {tool: scorecard, rules: [CI-Tests], status: adopt, note: "plus a repo-review plugin reading the workflow files"}
-  SL-SETUP-03: {tool: repo-review, rules: [sl-coverage-gate], status: build}
-  SL-SETUP-04: {tool: repo-review, rules: [sl-secret-scanning], status: build}
+  SL-SETUP-01: {tool: repo-checks, rules: [sl-setup-01], status: build, note: "sp-repo-review PC100 does the same once repo-review is adopted"}
+  SL-SETUP-02: {tool: repo-checks, rules: [sl-setup-02], status: build, note: "OpenSSF Scorecard CI-Tests too, on GitHub"}
+  SL-SETUP-03: {tool: repo-checks, rules: [sl-setup-03], status: build}
+  SL-SETUP-04: {tool: repo-checks, rules: [sl-setup-04], status: build}
   SL-SETUP-05: {tool: scorecard, rules: [Branch-Protection], status: adopt, note: "Scorecard is GitHub-first (partial GitLab, no Azure DevOps); OpenSSF Allstar can enforce it on GitHub"}
-  SL-SETUP-06: {tool: repo-review, rules: [sl-bundle-validate-in-ci], status: build}
-  SL-SETUP-07: {tool: repo-review, rules: [sl-sql-lint-configured], status: build}
-  SL-SETUP-08: {tool: repo-review, rules: [sl-test-setup], status: build}
+  SL-SETUP-06: {tool: repo-checks, rules: [sl-setup-06], status: build}
+  SL-SETUP-07: {tool: repo-checks, rules: [sl-setup-07], status: build}
+  SL-SETUP-08: {tool: repo-checks, rules: [sl-setup-08], status: build}
   SL-SETUP-09: {tool: scorecard, rules: [aggregate score], status: adopt}
 
 # Ruff rule profiles (Ruff 0.17.3: 973 rules, 832 stable, counted 2 Nov 2026).
@@ -197,6 +198,12 @@ ruff_profiles:
   starter: [F, E, W, I, B, C4, SIM, RET, UP, PERF, S, BLE, DTZ, N, ARG, T20, RUF, C90, A, PL, PT]
   strict: [F, E, W, I, B, C4, SIM, RET, UP, PERF, S, BLE, DTZ, N, ARG, T20, RUF, C90, A, PL, PT,
            FURB, TRY, PTH, ERA, LOG, G, PIE, ISC, FBT, EM, RSE, ANN, D, PD, NPY, ICN, TID, SLF, FIX, TD]
+
+# SQLFluff rules that mean more than style. Everything else from SQLFluff is SL-STYLE-03.
+sqlfluff_map:
+  AM02: SL-COST-CODE-18     # bare UNION removes duplicates with a full shuffle
+  AM04: SL-COST-CODE-13     # SELECT * (unknown number of result columns)
+  AM08: SL-COST-CODE-14     # implicit cross join
 
 # Every Ruff finding is reported under one catalog check. Most specific match wins: full code, then prefix.
 ruff_map:

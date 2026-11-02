@@ -1,0 +1,30 @@
+[project]
+name = "shiftleft"
+version = "0.1.0.dev0"
+description = "Fail fast on PySpark, Python and Databricks SQL before it runs: one runner over open-source checkers, findings under one catalog of checks."
+requires-python = ">=3.9"
+license = "Apache-2.0"
+dependencies = ["pyyaml>=6"]
+
+[project.optional-dependencies]
+tools = ["ruff==0.17.3", "sqlfluff==4.5.0", "vulture==2.16", "complexipy==8.3.0", "nbstripout==0.9.1", "pip-audit==2.10.1"]
+
+[project.scripts]
+shiftleft = "shiftleft.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shiftleft"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"catalog" = "shiftleft/_bundle/catalog"
+"core" = "shiftleft/_bundle/core"
+"bindings" = "shiftleft/_bundle/bindings"
+"templates" = "shiftleft/_bundle/templates"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "scripts"]

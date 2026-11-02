@@ -170,6 +170,11 @@ def lint_ruff(recs, bindings):
     errs = []
     ids = {r.get("id") for r in recs}
     for name, b in bindings.items():
+        for mk, mv in (b or {}).items():
+            if mk.endswith("_map") and mk != "ruff_map":
+                for code, cid in (mv or {}).items():
+                    if cid not in ids:
+                        errs.append(f"binding {name}: {mk} {code} -> {cid} is not a check")
         prof = (b or {}).get("ruff_profiles")
         rmap = (b or {}).get("ruff_map") or {}
         if not prof:

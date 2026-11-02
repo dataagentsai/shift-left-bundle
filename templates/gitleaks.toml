@@ -1,0 +1,30 @@
+# gitleaks rules for data repos: the default rules plus two patterns the defaults miss (found in run 1, 2 Nov 2026).
+title = "shiftleft"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "sl-connection-string-password"
+description = "Password inside a JDBC or ODBC connection string"
+regex = '''(?i)(?:jdbc|odbc|server|host)[^\n]{0,200}?\b(?:password|pwd)=([^;"'\s]{6,})'''
+secretGroup = 1
+keywords = ["password=", "pwd="]
+
+[[rules]]
+id = "sl-config-password-value"
+description = "Password, secret or token written as a literal value in config"
+regex = '''(?i)(?:password|passwd|secret|token)\w*["']?\s*[:=]\s*["']([^"'{}$\s]{8,})["']'''
+secretGroup = 1
+keywords = ["password", "passwd", "secret", "token"]
+
+[allowlist]
+description = "references to secret stores and environment variables are not secrets"
+regexes = ['''\{\{\s*secrets/''', '''env_var\(''', '''\$\{[A-Za-z_]+\}''']
+
+[[rules]]
+id = "sl-config-default-password"
+description = "A variable named like a password whose default is a literal value (bundle and YAML config)"
+regex = '''(?i)(?:password|passwd|secret|token)\w*\s*:\s*\n\s*(?:default|value)\s*:\s*["']([^"'{}$\s]{8,})["']'''
+secretGroup = 1
+keywords = ["password", "passwd", "secret", "token"]

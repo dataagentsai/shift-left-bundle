@@ -55,8 +55,8 @@
   statement: The repository SHOULD NOT keep functions, classes or modules that nothing uses.
   why: An unused copy of an old transform was edited by mistake during an incident instead of the live one.
   fix: Delete it; history keeps it.
-  stage: pr
-  gate: warn
+  stage: nightly
+  gate: report
   found_by: static
   applies_to: [python, pyspark, notebook]
   cost_impact: null
