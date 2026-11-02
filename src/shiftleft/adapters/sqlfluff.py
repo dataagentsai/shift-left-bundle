@@ -32,15 +32,13 @@ def scan(ctx):
     sql = [rel(ctx.project, p) for p in files(ctx.project, "*.sql")]
     if not sql:
         return ScanResult(NAME)
-    cfg = ctx.project / ".sqlfluff"
-    made = not cfg.exists()
-    if made:
-        cfg.write_text(CONFIG)
-    try:
-        r = run([exe, "lint", "--format", "json", "--nofail", *sql], ctx.project)
-    finally:
-        if made:
-            cfg.unlink()
+    own = any((ctx.project / f).exists() for f in (".sqlfluff", "setup.cfg", "tox.ini", "pyproject.toml"))
+    with tempfile.TemporaryDirectory() as d:                   # never write into the repository
+        cfg = []
+        if not own:
+            (Path(d) / "sqlfluff.cfg").write_text(CONFIG)
+            cfg = ["--config", str(Path(d) / "sqlfluff.cfg")]
+        r = run([exe, "lint", "--format", "json", "--nofail", *cfg, *sql], ctx.project)
     findings, notes = parse(r.stdout, ctx)
     f2, n2 = _notebook_cells(exe, ctx)
     return ScanResult(NAME, findings + f2, notes + n2)

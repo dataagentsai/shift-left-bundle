@@ -61,8 +61,13 @@ def merged_bundle(project: Path):
     return doc
 
 
-def bundle_line(project, finding_target, kinds=("resources/*.yml", "resources/*.yaml", "databricks.yml")):
-    """Find the bundle file and line of the resource a finding names (targets look like `job:daily_load/task:load`)."""
+RULE_KEY = {"job_on_existing_cluster": "existing_cluster_id", "cron_too_frequent": "quartz_cron_expression",
+            "dlt_continuous_for_batch_workload": "continuous:", "oversized_autoscale_max": "max_workers"}
+
+
+def bundle_line(project, finding_target, kinds=("resources/*.yml", "resources/*.yaml", "databricks.yml"), rule=None):
+    """Find the bundle file and line of the resource a finding names (targets look like `job:daily_load/task:load`),
+    then, for rules about one setting, the line of that setting inside the resource."""
     import re
     m = re.match(r"(?:job|pipeline|cluster|warehouse):([\w-]+)", finding_target or "")
     name = m.group(1) if m else ""
@@ -70,6 +75,12 @@ def bundle_line(project, finding_target, kinds=("resources/*.yml", "resources/*.
         for p in sorted(project.glob(pat)):
             ln = line_of(project, rel(project, p), f"{name}:") if name else None
             if ln:
+                key = RULE_KEY.get(rule)
+                if key:
+                    lines = p.read_text(errors="ignore").splitlines()
+                    for i in range(ln, min(len(lines), ln + 40)):
+                        if key in lines[i]:
+                            return rel(project, p), i + 1
                 return rel(project, p), ln
     return "databricks.yml", None
 
@@ -111,6 +122,6 @@ def scan(ctx):
             tmp = Path(d) / "databricks.yml"
             tmp.write_text(yaml.safe_dump(merged_bundle(ctx.project)))
             for f in _findings_for_file(tmp, *engines):
-                file, line = bundle_line(ctx.project, f.target)
+                file, line = bundle_line(ctx.project, f.target, rule=f.rule_name)
                 add(f, file, line)
     return ScanResult(NAME, out, sorted(notes))

@@ -10,6 +10,13 @@ steps:
   - task: UsePythonVersion@0
     inputs: { versionSpec: "3.11" }
   - script: pip install -r requirements-test.txt pre-commit diff-cover
-  - script: pre-commit run --from-ref origin/$(System.PullRequest.TargetBranchName) --to-ref HEAD
+  - script: pip install "shiftleft[tools] @ git+https://github.com/dataagentsai/shift-left-bundle"
+  - script: shiftleft scan . --stage pr --sarif shiftleft.sarif --summary pr-comment.md --html health.html
+  - task: PublishBuildArtifacts@1          # SARIF shows in the "Scans" tab with the SARIF SAST Scans Tab extension
+    condition: always()
+    inputs: { pathToPublish: shiftleft.sarif, artifactName: CodeAnalysisLogs }
+  - task: PublishBuildArtifacts@1          # the repo health page (D9 level 2)
+    condition: always()
+    inputs: { pathToPublish: health.html, artifactName: shiftleft-health }
   - script: pytest -q --cov --cov-branch --cov-report=xml
   - script: diff-cover coverage.xml --compare-branch=origin/$(System.PullRequest.TargetBranchName) --fail-under=80

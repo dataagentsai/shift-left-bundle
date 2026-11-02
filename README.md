@@ -4,7 +4,7 @@ Fail fast on PySpark, Python and Databricks SQL code before it runs: cost, secur
 
 Guide: <https://cleandataengineering.ai/learn/shift-left/>
 
-**Status:** the spec (0.2) is written: 131 checks in 13 families, for Python, PySpark, notebooks, SQL, dbt, materialized views and metric views. `examples/scd2` shows SCD2, idempotency, duplicates, dropped records and cartesian joins tested offline. `examples/sample-project` is a shop with 101 planted problems and 16 traps; `scripts/score.py` scores any run against the hidden key (`tests/RESULTS.md`). The runner works: `shiftleft scan PATH --stage pr` (64 of 101 caught on the sample, no false alarms; see below). See `TODO.md`.
+**Status:** the spec (0.2) is written: 131 checks in 13 families, for Python, PySpark, notebooks, SQL, dbt, materialized views and metric views. `examples/scd2` shows SCD2, idempotency, duplicates, dropped records and cartesian joins tested offline. `examples/sample-project` is a shop with 101 planted problems and 16 traps; `scripts/score.py` scores any run against the hidden key (`tests/RESULTS.md`). The runner works: `shiftleft scan PATH --stage pr` (88 of 101 caught on the sample, no false alarms; see below). See `TODO.md`.
 
 ## Use it
 
@@ -14,7 +14,14 @@ pip install sparkdoctor==0.1.8 pyspark-antipattern==0.4.1                       
 shiftleft scan . --stage pr --sarif shiftleft.sarif --md shiftleft-review.md          # exit 1 if a blocking finding is new
 shiftleft baseline . --out .shiftleft-baseline.json                                   # adopt on an existing repo
 shiftleft scan . --stage pr --baseline .shiftleft-baseline.json
+shiftleft scan . --stage pr --summary pr-comment.md --html health.html --previous last-run.json   # PR comment + health page
+shiftleft purity .                                                                    # every function: pure, impure or unknown
+shiftleft draft-tests .                                                               # starter tests for untested pure functions
 ```
+
+In tests: `from shiftleft import testkit as kit` (idempotent, unique, nothing dropped, no fan-out, no cartesian) and
+`@pytest.mark.pure` (table reads and writes fail inside the test). Plan check: add `shiftleft-plans.yaml` with table
+schemas and set `SHIFTLEFT_SPARK_PYTHON` to a Python with PySpark.
 
 Or as a pre-commit hook: see `.pre-commit-hooks.yaml`. Stages: `commit`, `pr`, `nightly`, `predeploy`, `all`.
 Mark an intended exception with `# shiftleft: allow <check-id> -- <reason>` (a reason is required).

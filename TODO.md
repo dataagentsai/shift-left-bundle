@@ -14,8 +14,8 @@ except Tier 7 (teaching), which runs alongside.
 | 2 | Proof material: sample repo with planted problems and a hidden answer key | done 2 Nov: 101 planted, 16 traps; run 0 (Ruff only) 17/101, 0 false alarms |
 | 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | done 2 Nov: 8 adapters, run 1 = 34/101, 0 false alarms, hook and baseline proven |
 | 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | done 2 Nov: run 2 = 64/101, 0 false alarms |
-| 5 | The delta: purity report, empty-table plan harness, gap report | next |
-| 6 | Real repo, cut the noise, run 2 | later |
+| 5 | The delta: purity report, empty-table plan harness, gap report | done 2 Nov: run 5 = 88/101, 0 false alarms |
+| 6 | Real repo, cut the noise, run 2 | next |
 | 7 | Teach and release: site pages, Claude skill, v0.1 tag | alongside |
 | 8 | Azure binding | later |
 
@@ -80,25 +80,26 @@ except Tier 7 (teaching), which runs alongside.
 |---|---|---|
 | SL-040 | Existing cost rules (CostLens oss-core: SQL, Python, plan, bundle config) behind the cost port; map their rule ids to our check ids; optional until published as a package | done 2 Nov: costlens adapter (optional import), bundle includes merged, notebook %sql cells extracted, keyword line lookup; select_star left unmapped (false alarm) |
 | SL-041 | Trial pyspark-antipattern and SparkDoctor on the sample; keep only rules the existing set lacks | done 2 Nov: SparkDoctor adopted (11 rules), pyspark-antipattern (2 rules), cylint dropped (REUSE.md) |
-| SL-042 | Add missing plan rules: CartesianProduct, Python UDF evaluation (from CostIntelligence1) | moved to Tier 5: plan rules need the empty-table harness (SL-052) |
+| SL-042 | Add missing plan rules: CartesianProduct, Python UDF evaluation (from CostIntelligence1) | done 2 Nov: CartesianProduct, nested-loop, Python UDF, shuffles in the plan harness |
 
 ## Tier 5: the delta
 
 | Id | Task | Status |
 |---|---|---|
 | SL-050 | Purity report: pure / impure / unknown per function, call chain, counts, refactor hint per impure-could-be-pure | done 2 Nov: src/shiftleft/purity.py + `shiftleft purity`; run 3 PURE 4/4 |
-| SL-051 | Test-time purity fixture: Spark reads, writes and catalog calls fail inside pure-function tests; run-twice check | — |
-| SL-052 | Empty-table plan harness: build empty DataFrames from schemas (contracts or DDL) and EXPLAIN each job's transforms | — |
-| SL-053 | Gap report: repo-review plugins for data repos + sp-repo-review + OpenSSF Scorecard + per-function gaps | — |
+| SL-051 | Test-time purity fixture: Spark reads, writes and catalog calls fail inside pure-function tests; run-twice check | done 2 Nov: shiftleft.pytest_plugin, @pytest.mark.pure, assert_repeatable |
+| SL-052 | Empty-table plan harness: build empty DataFrames from schemas (contracts or DDL) and EXPLAIN each job's transforms | done 2 Nov: plan_harness.py + shiftleft-plans.yaml schemas; functions planned automatically by parameter name |
+| SL-053 | Gap report: repo-review plugins for data repos + sp-repo-review + OpenSSF Scorecard + per-function gaps | done 2 Nov: repo-review plugin (entry points) sharing logic with the built-in adapter; OpenSSF Scorecard still GitHub-only |
 | SL-054 | Joined view: complex-and-untested, pure-but-untested | partly 2 Nov: pure-but-untested and module-without-tests done; complex-and-untested waits for coverage data |
-| SL-055 | Run 2 on the sample with the delta; record the score | — |
-| SL-056 | Draft tests for untested pure functions: snapshot tests (syrupy) from small dev samples, Hypothesis ghostwriter skeletons with schema-to-strategy helper, Claude-drafted case tables; keep a drafted test only if mutation testing shows it catches bugs. Pynguin on trial | — |
-| SL-058 | Dead code with entry points: read job entry points and notebook calls from databricks.yml so vulture stops flagging library functions | — |
-| SL-059 | Pull-request summary comment: blocking count and the top 5 to fix, posted by the CI templates (D9 level 1) | — |
-| SL-060a | Repo health page: static HTML per repo as a CI artifact; purity, untested pure functions, coverage, complexity hot spots, what is missing, findings by family, trend vs last run (D9 level 2) | — |
-| SL-061a | Metric view checks (SEM family): extract the YAML, validate against spec 1.1, parse expressions, the seven SEM rules | — |
-| SL-062a | dbt structure: dbt-bouncer and dbt-score on `dbt parse` output (offline) for TEST-07/08, CLEAN-27/28, SETUP-10 | — |
-| SL-057 | Test kit from examples/scd2 into the package: idempotency, uniqueness, nothing dropped, fan-out, cartesian; case tables for SCD2, dedupe, incremental, late data | — |
+| SL-055 | Run 2 on the sample with the delta; record the score | done 2 Nov: run 5 = 88/101 |
+| SL-056 | Draft tests for untested pure functions: snapshot tests (syrupy) from small dev samples, Hypothesis ghostwriter skeletons with schema-to-strategy helper, Claude-drafted case tables; keep a drafted test only if mutation testing shows it catches bugs. Pynguin on trial | done 2 Nov: shiftleft draft-tests (runnable drafts when schemas match); the mutation gate and Claude drafting come with the skill (SL-071) |
+| SL-058 | Dead code with entry points: read job entry points and notebook calls from databricks.yml so vulture stops flagging library functions | done 2 Nov: entry points from bundle, pyproject and .shiftleft-entrypoints; unused public functions grouped per module |
+| SL-059 | Pull-request summary comment: blocking count and the top 5 to fix, posted by the CI templates (D9 level 1) | done 2 Nov: --summary; GitHub template posts it |
+| SL-060a | Repo health page: static HTML per repo as a CI artifact; purity, untested pure functions, coverage, complexity hot spots, what is missing, findings by family, trend vs last run (D9 level 2) | done 2 Nov: --html health page with trend (--previous) |
+| SL-061a | Metric view checks (SEM family): extract the YAML, validate against spec 1.1, parse expressions, the seven SEM rules | done 2 Nov: adapters/metricview.py; SEM 7/7 |
+| SL-062a | dbt structure: dbt-bouncer and dbt-score on `dbt parse` output (offline) for TEST-07/08, CLEAN-27/28, SETUP-10 | done 2 Nov: dbt parse + dbt-bouncer (5 checks); TEST-07/08, CLEAN-27/28, SETUP-10 |
+| SL-064 | Our own pattern rules for the 9 remaining build checks (SEC-06, SEC-07, TEST-04, TEST-06, CLEAN-08, CLEAN-14, CLEAN-23, CLEAN-26, DEP-05) | — |
+| SL-057 | Test kit from examples/scd2 into the package: idempotency, uniqueness, nothing dropped, fan-out, cartesian; case tables for SCD2, dedupe, incremental, late data | done 2 Nov: shiftleft.testkit |
 
 ## Tier 6: real repo
 

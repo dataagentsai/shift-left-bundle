@@ -2,7 +2,7 @@
 import pytest
 from pyspark.sql import functions as F
 
-import testkit as kit
+from shiftleft import testkit as kit
 
 ORDERS = ("order_id INT, store_id INT, amount DOUBLE", [(1, 10, 5.0), (2, 10, 7.0), (3, 20, 9.0)])
 STORES = ("store_id INT, region STRING", [(10, "North"), (20, "South")])

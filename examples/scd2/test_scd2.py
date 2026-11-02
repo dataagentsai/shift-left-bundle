@@ -6,7 +6,7 @@ from datetime import date
 import pytest
 from pyspark.testing import assertDataFrameEqual
 
-import testkit as kit
+from shiftleft import testkit as kit
 from scd2 import late_rows, scd2
 
 H = "customer_id INT, name STRING, city STRING, valid_from DATE, valid_to DATE, is_current BOOLEAN"

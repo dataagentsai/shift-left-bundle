@@ -1,4 +1,4 @@
-"""Reusable checks for data transforms (prototype of the bundle's test kit, SL-TEST-09).
+"""Reusable checks for data transforms: the bundle's test kit (SL-TEST-09). `from shiftleft import testkit as kit`.
 
 Each one answers a question people usually only find out in production:
   assert_idempotent      run it twice: does the second run change anything?

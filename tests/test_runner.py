@@ -115,7 +115,9 @@ CONTRACT = [
     ("gitleaks", lambda c: gitleaks.parse([{"File": "a.py", "StartLine": 4, "RuleID": "x"}, {"File": "databricks.yml", "StartLine": 8, "RuleID": "y"}], c),
      ["SL-SECRET-01", "SL-SECRET-03"]),
     ("osv-scanner", lambda c: osv.parse(OSV_OUT, c), ["SL-DEP-01", "SL-DEP-01"]),
-    ("vulture", lambda c: vulture.parse("a.py:3: unused function 'f' (60% confidence)\na.py:1: unused import 'os' (90% confidence)", c), ["SL-CPLX-04"]),
+    ("vulture", lambda c: vulture.parse("a.py:3: unused function '_f' (60% confidence)\na.py:1: unused import 'os' (90% confidence)\n"
+                                        "a.py:5: unused function 'g' (60% confidence)\na.py:7: unused function 'job' (60% confidence)", c,
+                                        entry={"job"}), ["SL-CPLX-04", "SL-CPLX-04"]),
     ("complexipy", lambda c: complexipy.parse([{"path": "a.py", "function_name": "f", "complexity": 40}, {"path": "a.py", "function_name": "g", "complexity": 2}], c),
      ["SL-CPLX-02"]),
 ]

@@ -10,9 +10,10 @@ Score any run with `uv run scripts/score.py findings.json`.
 | 0b | 2 Nov 2026 | Ruff 0.17.3, starter profile, `templates/ruff.toml` | 17/101 | 19/101 | 0/16 | 8 |
 | 1 | 2 Nov 2026 | `shiftleft scan --stage all`: Ruff, SQLFluff, gitleaks (+ our rules), osv-scanner, vulture, complexipy, nbstripout, repo checks | 34/101 | 39/101 | 0/16 | 56 |
 | 3 | 2 Nov 2026 | run 2 + purity classifier (own) joined with the tests folder | 72/101 | 74/101 | 0/16 | 79 |
+| 5 | 2 Nov 2026 | run 3 + metric view checks, dbt parse + dbt-bouncer, empty-table plan check, dead code grouped by module | 88/101 | 90/101 | 0/16 | 64 |
 | 2 | 2 Nov 2026 | run 1 + CostLens oss-core, SparkDoctor and 2 pyspark-antipattern rules, our materialized-view, grant and bundle rules, notebook %sql extraction | 64/101 | 66/101 | 0/16 | 65 |
 
-Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
+Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`, `runs/run-5-tier5.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
 
 ## What run 0 taught us
 
@@ -68,3 +69,23 @@ Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-run
   not; "could be pure" needs both a read or write and some logic, so a pure writer shell is not flagged.
 - **Unplanned findings grew to 79**, mostly real by the catalog's own rules (12 pure functions untested, actions in
   logic). They are warnings, and the baseline absorbs them on adoption.
+
+## What run 5 taught us
+
+- **Every planted metric-view problem (7/7), plan problem (2/2), purity problem (4/4) and setup gap (7/7) is caught.**
+  The metric view checks also found real problems nobody planted: Revenue and Margin summed across the same
+  one-to-many join, and Margin defined differently in two views.
+- **dbt works fully offline**: `dbt parse` (no warehouse) then dbt-bouncer on the manifest. It runs in a temporary
+  folder; a first version left dbt's `.user.yml` in the repo, now fixed. dbt-score and dbt-project-evaluator were not
+  needed.
+- **The plan check needs only a schemas file**: functions whose parameters are named after a schema are planned on
+  empty tables automatically. 8 ran; functions that return counts or lists are skipped.
+- **Drafted tests catch the planted cartesian join on day one**: `shiftleft draft-tests` wrote 12 drafts; the
+  runnable ones passed except the planted bug, and the intended cross join (marked `shiftleft: allow`) is respected.
+- **Grouping dead code by module** cut unplanned findings from 88 to 64 without losing the planted one.
+- **Never write into the repository**: a run killed by low memory left SQLFluff's temporary config behind. SQLFluff now
+  reads its config from a temporary folder.
+- **Still missed (13)**: mostly checks we planned as our own pattern rules (secret printed, personal data displayed,
+  count-only test, remote test session, `%run` chain, column as attribute, inline condition, logic in notebooks,
+  built-in shadowed by a wildcard import), plus a SELECT * inside an f-string, a debug count inside a print, a
+  boolean flag argument (strict profile) and the runtime-version match. Next small batch: SL-064.

@@ -112,3 +112,14 @@ Ruff 0.17.3 has 973 rules (832 stable) from 60 linters. Starter profile 404 rule
 | SparkDoctor 0.1.8 | 26 | **Adopt (mapped rules only)** | JSON output, Apache-2.0. Adds count-to-test-emptiness, withColumn in a loop, Python UDF, long chains, collect in a loop. Its magic-literal rule (11 findings) is not mapped. |
 | pyspark-antipattern 0.4.1 | 37 | **Adopt two rules** | S011 (join with no condition) and F019 (inferSchema) add coverage. Many other rules are opinions (avoid spark.sql, avoid collect, avoid drop) and two hit traps. Text output only, written to stderr. |
 | cylint 0.1.5 | 10 | **Drop** | Every finding duplicates SparkDoctor or pyspark-antipattern. |
+
+## Tier 5 reuse decisions (2 Nov 2026)
+
+| Need | Took | Built | Why |
+|---|---|---|---|
+| dbt structure | `dbt parse` (offline) + dbt-bouncer 4.5.1, five checks | a 60-line adapter | dbt-score and dbt-project-evaluator were not needed; bouncer covers all five checks |
+| Metric views | PyYAML, sqlglot | the seven SEM rules | no outside linter exists |
+| Plan check | Spark's own planner | the empty-table harness | nothing reads a plan on empty, schema-only inputs |
+| Missing setup | repo-review (as a plugin host) | the data-repo checks | teams already on repo-review see them in one report |
+| Test guard and kit | pytest, pyspark.testing | the `pure` marker, five property checks | nothing blocks table I/O inside unit tests |
+| Test drafts | pytest parametrize | the draft generator | Hypothesis ghostwriter and Pynguin don't build DataFrames from schemas |

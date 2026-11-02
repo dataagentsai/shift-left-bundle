@@ -7,10 +7,20 @@ license = "Apache-2.0"
 dependencies = ["pyyaml>=6"]
 
 [project.optional-dependencies]
-tools = ["ruff==0.17.3", "sqlfluff==4.5.0", "vulture==2.16", "complexipy==8.3.0", "nbstripout==0.9.1", "pip-audit==2.10.1", "sparkdoctor==0.1.8", "pyspark-antipattern==0.4.1"]
+tools = ["ruff==0.17.3", "sqlfluff==4.5.0", "vulture==2.16", "complexipy==8.3.0", "nbstripout==0.9.1", "pip-audit==2.10.1", "sparkdoctor==0.1.8", "pyspark-antipattern==0.4.1", "sqlglot==30.27.0"]
+testkit = ["pyspark>=3.5,<4", "pandas", "pyarrow"]
 
 [project.scripts]
 shiftleft = "shiftleft.cli:main"
+
+[project.entry-points.pytest11]
+shiftleft = "shiftleft.pytest_plugin"
+
+[project.entry-points."repo_review.checks"]
+shiftleft = "shiftleft.repo_review_plugin:repo_review_checks"
+
+[project.entry-points."repo_review.families"]
+shiftleft = "shiftleft.repo_review_plugin:repo_review_families"
 
 [build-system]
 requires = ["hatchling"]

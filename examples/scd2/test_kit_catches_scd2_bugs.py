@@ -4,7 +4,7 @@ from datetime import date
 import pytest
 from pyspark.sql import functions as F
 
-import testkit as kit
+from shiftleft import testkit as kit
 from scd2 import HISTORY_COLS
 from test_scd2 import BASE, B, H
 
