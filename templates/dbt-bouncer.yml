@@ -1,0 +1,11 @@
+# dbt-bouncer checks the bundle adopts (catalog ids in comments). Runs on target/manifest.json from `dbt parse`,
+# which needs no warehouse connection. Check names confirmed with `dbt-bouncer list` (dbt-bouncer 4.5.1, 2 Nov 2026).
+dbt_artifacts_dir: target
+manifest_checks:
+  - name: check_model_has_unique_test          # SL-TEST-07
+  - name: check_model_has_unit_tests           # SL-TEST-08
+    include: ^models/(marts|intermediate)
+  - name: check_model_description_populated    # SL-SETUP-10
+  - name: check_model_hard_coded_references    # SL-CLEAN-27
+  - name: check_lineage_source_cannot_be_used  # SL-CLEAN-28
+    include: ^models/(marts|intermediate)

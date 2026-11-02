@@ -75,7 +75,7 @@ checks:
   SL-COST-PLAN-01: {tool: plan-harness, rules: [CartesianProduct], status: build, note: "checked on Spark 3.5.1, 2 Nov 2026: a keyless join on empty inputs plans as CartesianProduct"}
   SL-COST-PLAN-02: {tool: plan-harness, rules: [BroadcastNestedLoopJoin], status: build}
   SL-COST-PLAN-03: {tool: plan-harness, rules: [BatchEvalPython, ArrowEvalPython], status: build}
-  SL-COST-PLAN-04: {tool: costlens, rules: [predicate_pushdown_gap], status: cost, note: "reads PushedFilters / PartitionFilters on the Scan node"}
+  SL-COST-PLAN-04: {tool: costlens, rules: [predicate_pushdown_gap], status: cost, note: "needs the source scan in the plan; the empty-table harness reads in-memory inputs, so this one stays with CostLens on EXPLAIN FORMATTED of real tables"}
   SL-COST-PLAN-05: {tool: costlens, rules: [wide_stage_count], status: cost}
   SL-COST-PLAN-06: {tool: plan-harness, rules: [repeated-scan], status: build, note: "costlens repeated_table_scan works on SQL text; this is the plan-level version"}
   # ---- cost in job and compute config (databricks.yml, resources/*.yml)
@@ -144,8 +144,8 @@ checks:
   SL-SEC-09: {tool: nbstripout, rules: [--verify], status: adopt}
   SL-SEC-10: {tool: ruff, rules: [S], status: adopt, note: "every S rule not mapped to SL-SEC-01..05 (see ruff_map)"}
   SL-DEP-06: {tool: repo-checks, rules: [pip-in-notebook], status: build, note: "%pip install / MAGIC %pip without ==version"}
-  SL-TEST-07: {tool: dbt-bouncer, rules: [check_model_has_unique_test], status: adopt, note: "check name to confirm against dbt-bouncer docs in Tier 3"}
-  SL-TEST-08: {tool: dbt-bouncer, rules: [check_model_has_unit_tests], status: adopt, note: "check name to confirm in Tier 3"}
+  SL-TEST-07: {tool: dbt-bouncer, rules: [check_model_has_unique_test], status: adopt, note: "MO042; on dbt parse output, offline"}
+  SL-TEST-08: {tool: dbt-bouncer, rules: [check_model_has_unit_tests], status: adopt, note: "MO043, marts and intermediate models"}
   SL-TEST-09: {tool: test-kit, rules: [scd2, dedupe, incremental, late-data], status: build}
   SL-CPLX-06: {tool: ruff, rules: [PLR0911, PLR0912], status: adopt}
   SL-CPLX-07: {tool: sqlglot, rules: [sl-sql-complexity], status: build, note: "costlens excessive_joins, nested_subqueries_excessive, excessive_query_size cover part of it"}
@@ -168,9 +168,9 @@ checks:
   SL-CLEAN-24: {tool: ruff, rules: [FIX, TD], status: adopt}
   SL-CLEAN-25: {tool: sparkdoctor, rules: [SDK009], status: adopt}
   SL-CLEAN-26: {tool: opengrep, rules: [sl-inline-complex-condition], status: build, note: "Palantir PySpark style guide"}
-  SL-CLEAN-27: {tool: dbt-bouncer, rules: [check_model_has_no_hardcoded_references], status: adopt, note: "or dbt-project-evaluator fct_hard_coded_references; confirm in Tier 3"}
-  SL-CLEAN-28: {tool: dbt-project-evaluator, rules: [fct_direct_join_to_source, fct_marts_or_intermediate_dependent_on_source, fct_staging_dependent_on_staging], status: trial}
-  SL-SETUP-10: {tool: dbt-score, rules: [has_description, columns_have_description], status: adopt}
+  SL-CLEAN-27: {tool: dbt-bouncer, rules: [check_model_hard_coded_references], status: adopt, note: "MO009"}
+  SL-CLEAN-28: {tool: dbt-bouncer, rules: [check_lineage_source_cannot_be_used], status: adopt, note: "LI003 on marts and intermediate; dbt-project-evaluator not needed"}
+  SL-SETUP-10: {tool: dbt-bouncer, rules: [check_model_description_populated], status: adopt, note: "MO021; dbt-score not needed"}
   SL-SEM-01: {tool: metricview, rules: [yaml-schema-1.1, expression-parse], status: build, note: "YAML spec 1.1 per Databricks docs (checked 2 Nov 2026); dbt semantic models via dbt parse"}
   SL-SEM-02: {tool: metricview, rules: [measure-no-aggregate], status: build}
   SL-SEM-03: {tool: metricview, rules: [avg-of-ratio], status: build}
@@ -224,6 +224,14 @@ sparkdoctor_map:
 pyspark_antipattern_map:
   S011: SL-COST-CODE-14     # DataFrame join with no condition
   F019: SL-COST-CODE-12     # inferSchema / mergeSchema
+
+# dbt-bouncer checks (templates/dbt-bouncer.yml), run on the manifest from `dbt parse` (offline).
+dbt_bouncer_map:
+  check_model_has_unique_test: SL-TEST-07
+  check_model_has_unit_tests: SL-TEST-08
+  check_model_description_populated: SL-SETUP-10
+  check_model_hard_coded_references: SL-CLEAN-27
+  check_lineage_source_cannot_be_used: SL-CLEAN-28
 
 # Every Ruff finding is reported under one catalog check. Most specific match wins: full code, then prefix.
 ruff_map:

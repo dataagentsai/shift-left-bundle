@@ -1,0 +1,5 @@
+# Table schemas for the plan check: functions whose parameters are named after these are planned on empty tables.
+schemas:
+  orders: "order_id INT, store_id INT, customer_id INT, amount DOUBLE, profit DOUBLE, revenue DOUBLE, status STRING, currency STRING, channel STRING, region STRING, order_ts TIMESTAMP, order_date DATE"
+  stores: "store_id INT, store_name STRING, region STRING"
+  calendar_flags: "is_holiday BOOLEAN, is_sale BOOLEAN"

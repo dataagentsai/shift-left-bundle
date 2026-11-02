@@ -66,7 +66,7 @@ def enrich_with_stores(orders: DataFrame, stores: DataFrame) -> DataFrame:
 
 
 def enrich_with_calendar(orders: DataFrame, calendar_flags: DataFrame) -> DataFrame:
-    # shiftleft: allow SL-COST-CODE-14 -- calendar_flags is one row of run-wide flags
+    # shiftleft: allow SL-COST-CODE-14, SL-COST-PLAN-01, SL-COST-PLAN-02 -- calendar_flags is one row of run-wide flags
     return orders.crossJoin(F.broadcast(calendar_flags))
 
 
