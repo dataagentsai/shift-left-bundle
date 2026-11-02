@@ -46,6 +46,7 @@ tools:
   costlens: {licence: Apache-2.0 oss-core, kind: cost rules for SQL, Python, plans and bundles; optional adapter}
   plan-harness: {licence: ours, kind: empty-table EXPLAIN on local PySpark}
   purity: {licence: ours, kind: purity classifier over Python syntax trees (src/shiftleft/purity.py), joined with the tests folder; test-time guard in Tier 5}
+  patterns: {licence: ours, kind: own pattern rules over Python syntax trees and notebook text (src/shiftleft/adapters/patterns.py); replaces the planned Opengrep rules}
   shiftleft-tests: {licence: ours, kind: rules over test files and coverage data}
 
 checks:
@@ -93,8 +94,8 @@ checks:
   SL-SEC-03: {tool: ruff, rules: [S301, S506], status: adopt, note: "pickle, unsafe yaml.load"}
   SL-SEC-04: {tool: ruff, rules: [S501, S323], status: adopt}
   SL-SEC-05: {tool: ruff, rules: [S602, S605], status: adopt}
-  SL-SEC-06: {tool: opengrep, rules: [sl-secret-printed], status: build, note: "print/log of dbutils.secrets.get(...)"}
-  SL-SEC-07: {tool: opengrep, rules: [sl-pii-sample-logged], status: build, note: "show()/display() on tables whose columns are tagged personal in the contract; report only, noisy by nature"}
+  SL-SEC-06: {tool: patterns, rules: [sl-secret-printed], status: build, note: "print, display or logger call on a name read from dbutils.secrets.get(...)"}
+  SL-SEC-07: {tool: patterns, rules: [sl-pii-sample-logged], status: build, note: "show()/display() whose expression names a column in patterns.personal_columns; report only, noisy by nature"}
   SL-SEC-08: {tool: sqlglot, rules: [grant-broad], status: build, note: "GRANT ALL PRIVILEGES, or GRANT to `account users` / `users`; also inside %sql cells"}
   # ---- secrets
   SL-SECRET-01: {tool: gitleaks, rules: [gitleaks default rules, sl-databricks-pat], status: adopt, note: "add a rule for Databricks tokens (dapi...) if the default set lacks one"}
@@ -105,7 +106,7 @@ checks:
   SL-DEP-02: {tool: repo-checks, rules: [unpinned], status: build, note: "requirements lines without ==, and no lockfile"}
   SL-DEP-03: {tool: pip-licenses, rules: [allow-list], status: trial}
   SL-DEP-04: {tool: repo-review, rules: [sl-unmaintained-dependency], status: build, note: "last release date from the PyPI JSON API"}
-  SL-DEP-05: {tool: repo-review, rules: [sl-runtime-match], status: build, note: "compare test pins (pyspark, python) with spark_version in databricks.yml, using the Databricks Runtime release notes table"}
+  SL-DEP-05: {tool: patterns, rules: [sl-runtime-match], status: build, note: "pyspark / databricks-connect pins and .python-version compared with spark_version in databricks.yml and resources/, via patterns.runtimes"}
   # ---- purity
   SL-PURE-01: {tool: purity, rules: [classify], status: build}
   SL-PURE-02: {tool: purity, rules: [could-be-pure], status: build}
@@ -118,9 +119,9 @@ checks:
   SL-TEST-01: {tool: coverage, rules: [diff-cover --fail-under=80], status: adopt}
   SL-TEST-02: {tool: shiftleft-tests, rules: [pure-untested], status: build, note: "join of the purity report with coverage contexts"}
   SL-TEST-03: {tool: repo-review, rules: [sl-test-file-per-module], status: build}
-  SL-TEST-04: {tool: shiftleft-tests, rules: [offline-tests], status: build, note: "run unit tests with network blocked (pytest-socket) and a local[1] session"}
+  SL-TEST-04: {tool: patterns, rules: [offline-tests], status: build, note: "static part: builder.remote(...), a non-local master, databricks.connect imports or catalog.schema.table reads in tests. Runtime part (pytest-socket, local[1]) is in the test kit"}
   SL-TEST-05: {tool: mutmut, rules: [mutation score], status: adopt, note: "limited to pure functions via the purity report"}
-  SL-TEST-06: {tool: opengrep, rules: [sl-test-count-only], status: build, note: "test functions whose only assertion is on count()"}
+  SL-TEST-06: {tool: patterns, rules: [sl-test-count-only], status: build, note: "test functions whose every assertion compares count() or len()"}
   # ---- complexity
   SL-CPLX-01: {tool: ruff, rules: [C901], status: adopt}
   SL-CPLX-02: {tool: complexipy, rules: [cognitive complexity], status: adopt}
@@ -135,7 +136,7 @@ checks:
   SL-CLEAN-05: {tool: ruff, rules: [ERA001], status: adopt}
   SL-CLEAN-06: {tool: ruff, rules: [ARG001, ARG002, F401], status: adopt}
   SL-CLEAN-07: {tool: ruff, rules: [PLR2004], status: adopt, note: "noisy; report only"}
-  SL-CLEAN-08: {tool: repo-review, rules: [sl-thin-notebooks], status: build, note: "share of function definitions in notebooks vs modules"}
+  SL-CLEAN-08: {tool: patterns, rules: [sl-thin-notebooks], status: build, note: "one finding per notebook that defines functions or classes"}
   # ---- added in 0.2.0
   SL-COST-CODE-22: {tool: sqlglot, rules: [sl-mv-nondeterministic], status: build, note: "rand(), uuid() and similar in the MV query; time functions allowed only in WHERE per the incremental-refresh docs (checked 2 Nov 2026)"}
   SL-COST-CODE-23: {tool: sqlglot, rules: [sl-mv-chain-depth], status: build}
@@ -155,7 +156,7 @@ checks:
   SL-CLEAN-11: {tool: ruff, rules: [FBT], status: adopt}
   SL-CLEAN-12: {tool: ruff, rules: [SIM, C4, UP, FURB, PERF, PIE], status: adopt}
   SL-CLEAN-13: {tool: ruff, rules: [RET501, RET502, RET503], status: adopt}
-  SL-CLEAN-14: {tool: opengrep, rules: [sl-df-attribute-column], status: build, note: "Palantir PySpark style guide; trial linters may already have it"}
+  SL-CLEAN-14: {tool: patterns, rules: [sl-df-attribute-column], status: build, note: "Palantir PySpark style guide; df.col inside join, filter, where, select, withColumn, groupBy, orderBy"}
   SL-CLEAN-15: {tool: ruff, rules: [F403, F405, A001, A002], status: adopt, note: "from pyspark.sql.functions import * shadows sum, max, min, filter, round, abs"}
   SL-CLEAN-16: {tool: ruff, rules: [DTZ], status: adopt}
   SL-CLEAN-17: {tool: ruff, rules: [T20, LOG, G], status: adopt}
@@ -164,10 +165,10 @@ checks:
   SL-CLEAN-20: {tool: ruff, rules: [B, RUF, PLE, PLW, PLC, SLF], status: adopt, note: "every rule in these groups not mapped to a more specific check"}
   SL-CLEAN-21: {tool: ruff, rules: [PT], status: adopt}
   SL-CLEAN-22: {tool: ruff, rules: [PD, NPY], status: adopt}
-  SL-CLEAN-23: {tool: opengrep, rules: [sl-notebook-run-chain], status: build, note: "%run and dbutils.notebook.run used to pull in definitions"}
+  SL-CLEAN-23: {tool: patterns, rules: [sl-notebook-run-chain], status: build, note: "%run and dbutils.notebook.run used to pull in definitions"}
   SL-CLEAN-24: {tool: ruff, rules: [FIX, TD], status: adopt}
   SL-CLEAN-25: {tool: sparkdoctor, rules: [SDK009], status: adopt}
-  SL-CLEAN-26: {tool: opengrep, rules: [sl-inline-complex-condition], status: build, note: "Palantir PySpark style guide"}
+  SL-CLEAN-26: {tool: patterns, rules: [sl-inline-complex-condition], status: build, note: "Palantir PySpark style guide; more than patterns.max_inline_conditions conditions in filter, where or when"}
   SL-CLEAN-27: {tool: dbt-bouncer, rules: [check_model_hard_coded_references], status: adopt, note: "MO009"}
   SL-CLEAN-28: {tool: dbt-bouncer, rules: [check_lineage_source_cannot_be_used], status: adopt, note: "LI003 on marts and intermediate; dbt-project-evaluator not needed"}
   SL-SETUP-10: {tool: dbt-bouncer, rules: [check_model_description_populated], status: adopt, note: "MO021; dbt-score not needed"}
@@ -329,3 +330,16 @@ purity:
     column_expression: ["pyspark.sql.functions.* except the clock and randomness entries", F.col, F.lit, F.when, F.expr, Window]
     standard_pure: [math, re, decimal, fractions, itertools, functools, operator, string, textwrap, json.loads, json.dumps]
   test_guard_patch: [pyspark.sql.DataFrameReader, pyspark.sql.DataFrameWriter, pyspark.sql.SparkSession.table, pyspark.sql.SparkSession.sql, delta.tables.DeltaTable, dbutils]
+
+# Settings for our own pattern rules (adapters/patterns.py).
+patterns:
+  max_inline_conditions: 3          # SL-CLEAN-26: more than this many & / | terms inline is flagged
+  personal_columns: [email, phone, mobile, ssn, aadhaar, pan_number, passport, dob, date_of_birth, birth_date,
+                     address, street, postcode, zipcode, first_name, last_name, full_name, ip_address, card_number, iban]
+  # SL-DEP-05: Databricks Runtime (LTS) -> Spark and Python. From the Databricks Runtime release notes; recheck on each new LTS.
+  runtimes:
+    "13.3": {spark: "3.4", python: "3.10"}
+    "14.3": {spark: "3.5", python: "3.10"}
+    "15.4": {spark: "3.5", python: "3.11"}
+    "16.4": {spark: "3.5", python: "3.12"}
+    "17.3": {spark: "4.0", python: "3.12"}

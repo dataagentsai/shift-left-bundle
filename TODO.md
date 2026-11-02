@@ -14,7 +14,7 @@ except Tier 7 (teaching), which runs alongside.
 | 2 | Proof material: sample repo with planted problems and a hidden answer key | done 2 Nov: 101 planted, 16 traps; run 0 (Ruff only) 17/101, 0 false alarms |
 | 3 | Wire the off-the-shelf tools through one runner; run 1 on the sample | done 2 Nov: 8 adapters, run 1 = 34/101, 0 false alarms, hook and baseline proven |
 | 4 | Cost adapter: existing cost rules behind the cost port; trial the young PySpark linters | done 2 Nov: run 2 = 64/101, 0 false alarms |
-| 5 | The delta: purity report, empty-table plan harness, gap report | done 2 Nov: run 5 = 88/101, 0 false alarms |
+| 5 | The delta: purity report, empty-table plan harness, gap report | done 2 Nov: run 5 = 88/101; with our own pattern rules (SL-064) run 6 = 97/101, 0 false alarms |
 | 6 | Real repo, cut the noise, run 2 | next |
 | 7 | Teach and release: site pages, Claude skill, v0.1 tag | alongside |
 | 8 | Azure binding | later |
@@ -98,7 +98,7 @@ except Tier 7 (teaching), which runs alongside.
 | SL-060a | Repo health page: static HTML per repo as a CI artifact; purity, untested pure functions, coverage, complexity hot spots, what is missing, findings by family, trend vs last run (D9 level 2) | done 2 Nov: --html health page with trend (--previous) |
 | SL-061a | Metric view checks (SEM family): extract the YAML, validate against spec 1.1, parse expressions, the seven SEM rules | done 2 Nov: adapters/metricview.py; SEM 7/7 |
 | SL-062a | dbt structure: dbt-bouncer and dbt-score on `dbt parse` output (offline) for TEST-07/08, CLEAN-27/28, SETUP-10 | done 2 Nov: dbt parse + dbt-bouncer (5 checks); TEST-07/08, CLEAN-27/28, SETUP-10 |
-| SL-064 | Our own pattern rules for the 9 remaining build checks (SEC-06, SEC-07, TEST-04, TEST-06, CLEAN-08, CLEAN-14, CLEAN-23, CLEAN-26, DEP-05) | — |
+| SL-064 | Our own pattern rules for the 9 remaining build checks (SEC-06, SEC-07, TEST-04, TEST-06, CLEAN-08, CLEAN-14, CLEAN-23, CLEAN-26, DEP-05) | done 2 Nov: adapters/patterns.py over syntax trees (no Opengrep needed), settings in the binding; run 6 = 97/101, 0 false alarms; 217 tests |
 | SL-057 | Test kit from examples/scd2 into the package: idempotency, uniqueness, nothing dropped, fan-out, cartesian; case tables for SCD2, dedupe, incremental, late data | done 2 Nov: shiftleft.testkit |
 
 ## Tier 6: real repo

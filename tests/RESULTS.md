@@ -11,9 +11,10 @@ Score any run with `uv run scripts/score.py findings.json`.
 | 1 | 2 Nov 2026 | `shiftleft scan --stage all`: Ruff, SQLFluff, gitleaks (+ our rules), osv-scanner, vulture, complexipy, nbstripout, repo checks | 34/101 | 39/101 | 0/16 | 56 |
 | 3 | 2 Nov 2026 | run 2 + purity classifier (own) joined with the tests folder | 72/101 | 74/101 | 0/16 | 79 |
 | 5 | 2 Nov 2026 | run 3 + metric view checks, dbt parse + dbt-bouncer, empty-table plan check, dead code grouped by module | 88/101 | 90/101 | 0/16 | 64 |
+| 6 | 2 Nov 2026 | run 5 + our own pattern rules (secret printed, personal data shown, remote test session, count-only test, logic in notebooks, column as attribute, %run chain, inline condition, runtime match) | 97/101 | 98/101 | 0/16 | 66 |
 | 2 | 2 Nov 2026 | run 1 + CostLens oss-core, SparkDoctor and 2 pyspark-antipattern rules, our materialized-view, grant and bundle rules, notebook %sql extraction | 64/101 | 66/101 | 0/16 | 65 |
 
-Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`, `runs/run-5-tier5.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
+Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-runner.md`, `runs/run-2-cost.md`, `runs/run-3-purity.md`, `runs/run-5-tier5.md`, `runs/run-6-patterns.md`. Run 1 took under 8 seconds on a laptop, run 2 about 10.
 
 ## What run 0 taught us
 
@@ -89,3 +90,15 @@ Details: `runs/run-0-ruff-only.md`, `runs/run-0b-ruff-tuned.md`, `runs/run-1-run
   count-only test, remote test session, `%run` chain, column as attribute, inline condition, logic in notebooks,
   built-in shadowed by a wildcard import), plus a SELECT * inside an f-string, a debug count inside a print, a
   boolean flag argument (strict profile) and the runtime-version match. Next small batch: SL-064.
+
+## What run 6 taught us
+
+- **Nine pattern rules in one adapter, about 300 lines, no new tool.** The binding planned five of them as Opengrep
+  rules; Python's own syntax tree was enough, so Opengrep stays unused. Personal column names, the inline-condition
+  limit and the runtime table (Databricks Runtime to Spark and Python) are data in the binding.
+- **All 9 planted problems caught, 0 traps hit.** The value-comparing test (trap T11) is not called count-only.
+- **Two unplanned findings, both correct**: the helper notebook pulled in by `%run` also defines a function, and
+  `explore.ipynb` shows customer names, emails and phone numbers, with that output saved in the file.
+- **Still missed (4)**: a row count inside a print (P010), a SELECT * inside an f-string (P014), a boolean flag
+  argument (P074, strict profile only) and `sum` shadowed by a wildcard import (P078, flagged on the import line,
+  not the use). None need a new tool; leave them for Tier 6 unless a real repo shows them.
