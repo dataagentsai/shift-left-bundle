@@ -62,7 +62,7 @@
   found_by: static
   applies_to: [python, pyspark, notebook]
   cost_impact: null
-  dac: [REL-02]
+  dac: [REL-02, NAME-01]
   cites:
   - standard: PEP-8
     ref: Naming Conventions

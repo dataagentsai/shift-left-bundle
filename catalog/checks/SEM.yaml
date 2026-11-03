@@ -108,6 +108,6 @@
   found_by: test
   applies_to: [metric-view, dbt]
   cost_impact: null
-  dac: [TEST-03]
+  dac: [TEST-03, SERV-06]
   cites: []
   related: [SL-SEM-01]

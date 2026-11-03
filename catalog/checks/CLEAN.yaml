@@ -252,7 +252,7 @@
   found_by: static
   applies_to: [python, pyspark, notebook]
   cost_impact: null
-  dac: [LATE-01]
+  dac: [LATE-01, LATE-04]
   cites: []
   related: [SL-PURE-03]
 - id: SL-CLEAN-17

@@ -45,7 +45,7 @@
   found_by: static
   applies_to: [python, pyspark, notebook]
   cost_impact: null
-  dac: [TEST-03, TEST-05]
+  dac: [TEST-03, TEST-05, IDEMP-01]
   cites: []
   related: [SL-COST-CODE-21]
 - id: SL-PURE-04
@@ -93,7 +93,7 @@
   found_by: static
   applies_to: [python, pyspark, notebook]
   cost_impact: medium
-  dac: [COST-02]
+  dac: [COST-02, PURE-01]
   cites: []
   related: [SL-COST-CODE-11]
 - id: SL-PURE-07

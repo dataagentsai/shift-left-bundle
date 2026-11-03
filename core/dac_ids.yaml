@@ -1,13 +1,17 @@
 # DAC obligation ids this catalog may link to, copied from dataagentsai/data-platform-catalog.
-# Source commit: 6d4f3cd. Refresh with: uv run scripts/sync_dac_ids.py
+# Source commit: 35c57cd. Refresh with: uv run scripts/sync_dac_ids.py
+CAT-01: The catalog says what the metadata says
 CFG-01: Everything that runs was declared
 CFG-02: Cross-cutting concerns are on by default
 CFG-03: Every run records the configuration it ran under
+CFG-04: The control plane is changed only through its declared operations
+CFG-05: An unknown or misplaced setting is rejected, never ignored
 COST-02: Platform cost guardrails
 COST-03: Cost can be traced to a team and a job
 COST-04: No compute running when nothing needs it
 DEL-01: Detecting hard deletes at the source
 DEL-03: Deletes flow through derived tables
+DEL-04: A full copy that would delete too much is held, not loaded
 DES-04: Grain and keys of every table
 DQ-01: Data quality rules written with owners
 DQ-02: What happens to a row that fails a rule
@@ -17,22 +21,33 @@ DUP-01: Same batch or file arriving twice
 DUP-02: Rerunning a job leaves the result unchanged
 DUP-03: Duplicates already inside the source
 DUP-04: Replayed events in a stream
+ENC-01: Data at rest is encrypted with separate keys and never public
+ENG-01: Platform tables are written only by the shared engines
 ENV-01: Separate environments with separate data
 ENV-02: Access through groups and service identities
+FILE-01: Every delivered file ends with a recorded outcome
 FLOW-01: Data flows one way through the layers
 GATE-01: Nothing passes by absence
 GATE-02: A contract is never loosened to make a job pass
 GATE-03: Agents propose, gates decide
+GOLD-01: Derived tables are replaced by window, never appended
 HEAL-01: A self-healing fix goes through the same gates
 HIST-03: Handing over from history load to incremental loads
 HIST-04: Reloading or backfilling a past period
+HIST-05: Corrections reach gold only through a backfill plan
+IDEMP-01: Each layer declares what makes its write idempotent
+ING-01: Every way into bronze passes the same entry steps
+KEY-01: Surrogate keys are the same on every rebuild
 LATE-01: Late and corrected rows rebuild the right periods
 LATE-02: Facts arriving before their reference data
 LATE-03: Event time, watermarks and late events in streams
 LATE-04: Time zones and business dates
 LIN-01: Every hop emits lineage
+ML-01: A machine learning model is a data product
+NAME-01: Table names follow one declared pattern
 OPS-01: Alerts reach someone who can act
 OPS-03: Every run leaves a record
+OPS-06: Alerts are few enough to be read
 ORCH-01: Jobs wait for their data, not the clock
 ORCH-02: Retries for passing failures only
 ORCH-03: Restart after failing in the middle
@@ -41,7 +56,13 @@ ORCH-05: Recovery time and data loss limits
 ORCH-06: Stream restarts from where it stopped
 PERF-02: Freshness target measured end to end
 PERF-05: Storage layout and file sizes kept healthy
+PII-01: Personal data is protected before it is first stored
 PROF-01: Every dataset is profiled and drift is visible
+PROJ-01: Every contract column reaches silver unless a selection is declared
+PUB-01: Derived tables pass their own checks before publish
+PURE-01: Transform logic is separate from reads and writes
+QUAR-01: A released row goes through the same checks again
+RAW-01: The first kept layer holds every record as delivered
 REC-01: Counts and totals reconciled layer by layer
 REC-03: Tolerances and who signs off differences
 REC-05: Reconciliation names the hop that drifted
@@ -63,6 +84,8 @@ SEC-04: Access is audited
 SERV-01: A contract with each consumer
 SERV-02: Consumers can tell whether data is complete
 SERV-04: Business definitions live in one place
+SERV-06: Conversation interfaces and agents use certified metrics only
+SEV-01: A rule's severity decides what happens on failure
 SIM-01: Every incident kind has a planted test
 TEST-03: Automated tests run on every change
 TEST-05: Failure, rerun and recovery tested on purpose
