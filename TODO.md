@@ -140,6 +140,7 @@ except Tier 7 (teaching), which runs alongside.
 
 - `df.limit(0)` or an empty local list lets Spark fold an empty join away and hide a cartesian product; build empty inputs from an empty RDD (`testkit.schema_only`).
 - Set `PYSPARK_PYTHON` unconditionally in the test fixture; this machine's shell sets it to Python 3.11.
+- A test that needs an optional extra must get it from the dev group. The metric view tests need sqlglot (only in the `tools` extra); once `uv run` created uv.lock and synced the venv to the base dependencies (3 Nov), four SEM cases failed. Fixed 4 Nov: `[dependency-groups] dev = ["sqlglot==30.27.0"]`; 296 passed, 1 skipped.
 
 ## Open questions
 

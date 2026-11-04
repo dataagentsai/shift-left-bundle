@@ -10,6 +10,11 @@ dependencies = ["pyyaml>=6"]
 tools = ["ruff==0.17.3", "sqlfluff==4.5.0", "vulture==2.16", "complexipy==8.3.0", "nbstripout==0.9.1", "pip-audit==2.10.1", "sparkdoctor==0.1.8", "pyspark-antipattern==0.4.1", "sqlglot==30.27.0"]
 testkit = ["pyspark>=3.5,<4", "pandas", "pyarrow"]
 
+# Installed by plain `uv run` (uv syncs the dev group by default). The metric view tests judge expressions with
+# sqlglot, which is otherwise only in the optional `tools` extra; keep the pin equal to the one there.
+[dependency-groups]
+dev = ["sqlglot==30.27.0"]
+
 [project.scripts]
 shiftleft = "shiftleft.cli:main"
 
