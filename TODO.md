@@ -171,3 +171,9 @@ Practices on `~/Engineering-Best-Practices.html` that could be caught by a stati
 | SL-GOLD-05 (proposed) | Conformed dimension defined twice | A second dataset or module that defines a conformed dimension (date, plant, material, customer, dealer) already defined elsewhere | PR | Kimball star schemas per domain, shared dimensions built once |
 | SL-COST-CODE-26 (proposed) | Hand-picked partitions or hand-written table upkeep | PARTITIONED BY or partitionBy in table definitions and writes, or OPTIMIZE and VACUUM jobs written by hand, where clustering and automatic upkeep should be used | commit | Liquid clustering and predictive optimization; Partitioning and hand-written OPTIMIZE jobs |
 | SL-SEC-11 (proposed) | Unsafe storage in infrastructure code | A bucket that can be public, a bucket not encrypted with its own key, or a landing bucket without an expiry rule, in infrastructure code | PR | Own S3 bucket and KMS key per catalog; private network; Landing is short-lived and private to the lander; Terraform for AWS and Databricks infrastructure |
+
+## Proposed (5 Nov 2026): complexity and generated tests (see DataAgents.ai doc 84)
+- **Plan-based data-logic complexity** for SQL, dbt and PySpark: joins, shuffles, CASE/when branches, UDFs, predicates, windows, read from EXPLAIN plans (works on serverless). Reuse sqlquality's metric set.
+- **Decision-path complexity for SQL** (cyclomatic-style) from the sqlglot AST.
+- **Pipeline graph complexity** (fan-in, fan-out, depth, critical path) from the manifest and lineage.
+- **Generated tests checked against declared intent**: mutant-killing and branch-covering datasets (XData / EvoSQL ideas; EvoSQL is open source), checked as properties (rows in = rows out, grain unique, unmatched and duplicate counts, ratios from parts), emitted as table-driven unit tests. Complexity sets how many cases each model gets.
