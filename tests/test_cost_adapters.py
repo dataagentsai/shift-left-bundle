@@ -108,3 +108,25 @@ def test_costlens_adapter_on_the_sample():
     assert ("SL-COST-CONFIG-02", "resources/jobs.yml") in got          # bundle includes are followed
     assert ("SL-COST-CODE-17", "notebooks/daily_load.py") in got       # %sql cell in a source notebook is read
     assert all(f.check in CHECKS for f in res.findings)
+
+
+JOIN_CASES = [
+    # name, file content (line 3 holds the flagged call), kept?
+    ("str.join in a file with no pyspark", "x = 1\nparts = ['a']\ny = '|'.join(parts)\n", False),
+    ("a name used as the separator, no pyspark", "x = 1\nparts = ['a']\ny = SEP.join(parts)\n", False),
+    ("Thread.join() in a pyspark file", "from pyspark.sql import functions as F\nt = 1\nt.join()\n", False),
+    ("string literal receiver in a pyspark file", "import pyspark\nx = 1\ny = ''.join(str(i) for i in x)\n", False),
+    ("chr(10).join in a pyspark file", "import pyspark\nx = 1\ny = chr(10).join(x)\n", False),
+    ("join over a generator in a pyspark file", "import pyspark\nx = 1\ny = sep.join(i for i in x)\n", False),
+    ("a DataFrame join with no condition", "from pyspark.sql import functions as F\nx = 1\ndf.join(other)\n", True),
+    ("a DataFrame join with a condition", "from pyspark.sql import functions as F\nx = 1\ndf.join(other, 'k')\n", True),
+    ("a file that cannot be parsed keeps the finding", "def (:\n", True),
+]
+
+
+@pytest.mark.parametrize("name, content, kept", JOIN_CASES, ids=[c[0] for c in JOIN_CASES])
+def test_a_join_that_is_not_a_dataframe_join_is_dropped(tmp_path, name, content, kept):
+    (tmp_path / "a.py").write_text(content)
+    text = "error[S011][HIGH]: Join without join conditions causes a nested-loop scan\n  --> a.py:3:1\n"
+    found = pyspark_antipattern.parse(text, ctx(tmp_path))
+    assert [(f.check, f.line) for f in found] == ([("SL-COST-CODE-14", 3)] if kept else [])
