@@ -99,7 +99,8 @@ class Tracer:
         if not out:   # the SQL text is in a variable: spark.sql(q) -> follow q to its f-string
             for name in [n for n in ast.walk(stmt) if isinstance(n, ast.Name)]:
                 a = self._assignment(name.id, name, file)
-                if a is not None and isinstance(a.value, (ast.JoinedStr, ast.BinOp, ast.Call)):
+                # the binding may be a loop target (ast.For), a with-item or an import: those have no `.value`
+                if a is not None and isinstance(getattr(a, "value", None), (ast.JoinedStr, ast.BinOp, ast.Call)):
                     out += self.interpolations(a, file)
         return out
 

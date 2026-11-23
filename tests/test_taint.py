@@ -112,3 +112,23 @@ def test_refine_lowers_table_values_to_warn(tmp_path):
     f = Finding("SL-SEC-01", "m.py", 2, "sparkdoctor", "SDK026", "dynamic")
     kept, notes = refine.apply([f], tmp_path, ["sql-value-source"])
     assert kept[0].gate == "warn" and notes == ["refine sql-value-source: lowered 1 finding(s) to warn"]
+
+
+@pytest.mark.parametrize("name, files, at", [
+    ("loop variable used as the SQL text", {"m.py": """\
+        for q in QUERIES:
+            spark.sql(q)
+        """}, ("m.py", 2)),
+    ("with-item used as the SQL text", {"m.py": """\
+        with open(P) as q:
+            spark.sql(q)
+        """}, ("m.py", 2)),
+    ("import used as the SQL text", {"m.py": """\
+        from queries import q
+        spark.sql(q)
+        """}, ("m.py", 2)),
+], ids=lambda v: v if isinstance(v, str) else "")
+def test_a_binding_without_a_value_does_not_crash_the_trace(tmp_path, name, files, at):
+    """A name bound by a loop, a with-statement or an import has no `.value`; the trace must pass over it (found by
+    scanning a repository where `for x in ...: spark.sql(x)` appears)."""
+    trace(tmp_path, files, *at)
